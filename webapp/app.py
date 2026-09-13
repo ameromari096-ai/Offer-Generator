@@ -14,7 +14,6 @@ run.
 
 from __future__ import annotations
 
-import base64
 import json
 import re
 import uuid
@@ -33,8 +32,9 @@ from offer_agent.reference import ReferenceStore
 from offer_agent.storage import LocalDevStorageBackend
 from offer_agent.validation import validate_offer
 from offer_agent.workflow import finalize_offer, format_completion_output
-from webapp.document_parsing import DocumentParseError, extract_text, image_media_type, is_image
-from webapp.llm_extraction import ExtractionResult, extract_offer_fields
+from webapp.document_parsing import DocumentParseError, extract_text, is_image
+from webapp.extraction_schema import ExtractionResult
+from webapp.regex_extraction import extract_offer_fields_regex
 
 BASE_DIR = Path(__file__).resolve().parent.parent
 DATA_DIR = BASE_DIR / "data"
@@ -236,12 +236,17 @@ def extract():
         cv_text = extract_text(cv_file.filename, cv_file.read()) if _has_file(cv_file) else None
 
         passport_text = None
-        passport_image_b64 = None
-        passport_image_media_type = None
+        passport_image_note = None
         if _has_file(passport_file):
             if is_image(passport_file.filename):
-                passport_image_b64 = base64.standard_b64encode(passport_file.read()).decode("utf-8")
-                passport_image_media_type = image_media_type(passport_file.filename)
+                # The free/regex extractor has no OCR — an image passport
+                # can't be read this way; say so rather than silently
+                # ignoring the upload.
+                passport_image_note = (
+                    "Passport image uploaded, but this deployment's free extraction "
+                    "mode can't read images (no OCR) — please confirm name and "
+                    "nationality manually."
+                )
             else:
                 passport_text = extract_text(passport_file.filename, passport_file.read())
     except DocumentParseError as exc:
@@ -253,25 +258,22 @@ def extract():
         )
 
     try:
-        result = extract_offer_fields(
+        result = extract_offer_fields_regex(
             hiring_approval_text=hiring_text,
             cv_text=cv_text,
             passport_text=passport_text,
-            passport_image_base64=passport_image_b64,
-            passport_image_media_type=passport_image_media_type,
         )
     except Exception as exc:  # noqa: BLE001 - surfaced to the user, not raised
         return render_template(
             "index.html",
             mandatory_fields=MANDATORY_FIELDS,
             templates=fields_module.TEMPLATES,
-            extraction_error=(
-                "Automatic extraction failed (is ANTHROPIC_API_KEY set on this "
-                f"deployment?): {exc}"
-            ),
+            extraction_error=f"Automatic extraction failed: {exc}",
         )
 
     prefill, business_unit_display, banner_notes = _map_extraction_to_prefill(result)
+    if passport_image_note:
+        banner_notes.append(passport_image_note)
 
     return render_template(
         "index.html",

@@ -67,21 +67,32 @@ python webapp/app.py   # http://localhost:8000
 ### Auto-fill from uploaded documents
 
 The "Auto-fill from documents" section on the form parses an uploaded
-hiring approval (.pdf/.docx/.msg/.eml/.txt), CV (.pdf/.docx/.txt), and
-optional passport (image or PDF/text), then calls Claude to extract the
-fields — the same source-priority, notice-period-section, and
-never-infer-nationality rules as the chat-based `offer-agent` skill (see
-`webapp/llm_extraction.py`'s system prompt). Extracted values pre-fill the
-form below for review/correction; a genuine conflict (e.g. the hiring
+hiring approval (.pdf/.docx/.msg/.eml/.txt) and CV (.pdf/.docx/.txt) using
+`webapp/regex_extraction.py` — a **free, rule-based extractor with no API
+key, no billing, and no external dependency at all**. It looks for the
+exact labels the hiring-approval templates we've tested use ("Candidate
+Recommended", "Job Title", "Reporting Line", "Division"/"Department",
+"Business Unit", "Proposed Salary", and "Notice Period" specifically
+under a Contract Terms section — converting months to days when stated
+that way), plus phone/email patterns in the CV. Extracted values pre-fill
+the form below for review/correction; a genuine conflict (e.g. the hiring
 approval's "Division" and "Department" disagreeing) is left blank with a
-banner explaining it, rather than guessed. You can still skip this
-section and type fields in manually — that path needs no API key at all.
+banner explaining it, rather than guessed.
 
-This requires **`ANTHROPIC_API_KEY`** set in the environment (your own
-Anthropic API key — get one at [console.anthropic.com](https://console.anthropic.com)).
-Without it, the manual-entry form below still works fine; only the
-"Extract from documents" button fails, with a clear on-page error rather
-than a crash.
+Being regex-based, it's less flexible than an LLM about document layout —
+a hiring approval shaped very differently from the ones it was built
+against will extract less, leaving more for you to fill in manually
+(which always works regardless — the "Auto-fill" section is entirely
+optional). It also can't read a passport image (no OCR); a text-based
+passport is scanned only for an explicit nationality statement.
+
+A higher-robustness, LLM-based alternative (`webapp/llm_extraction.py`,
+same output shape, handles arbitrary layouts and can read a passport
+photo) exists in the repo but isn't wired in by default, since it needs
+`ANTHROPIC_API_KEY` and bills your Anthropic account per extraction. To
+switch to it: `pip install anthropic` (add it back to `requirements.txt`),
+then in `webapp/app.py` swap the `regex_extraction.extract_offer_fields_regex`
+import/call for `llm_extraction.extract_offer_fields`.
 
 ### Deploy it (Docker + Render)
 
@@ -105,9 +116,10 @@ Notes:
   storage (see below) for anything you need to keep.
 - The free plan also spins down after inactivity, so the first request
   after a while takes ~30–60s to wake back up.
-- Set `ANTHROPIC_API_KEY` in the Render service's environment variables
-  (Dashboard → your service → Environment) to enable document auto-fill;
-  otherwise the manual-entry form still works, just without that shortcut.
+- Document auto-fill works out of the box — no API key, no environment
+  variable, no billing. (If you've switched to the LLM-based extractor
+  instead, set `ANTHROPIC_API_KEY` under Dashboard → your service →
+  Environment.)
 
 ## Wiring up real storage
 

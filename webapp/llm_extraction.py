@@ -3,51 +3,25 @@ passport, using Claude to do the language-understanding work the offer-agent
 chat skill does manually — same priority rules, same notice-period-section
 rule, same "never infer nationality" rule.
 
-Requires ANTHROPIC_API_KEY in the environment. If it's unset, callers should
-catch the resulting error and fall back to the manual entry form — this
-feature is additive, never a hard requirement for using the app.
+NOT wired into the deployed web app by default — webapp.regex_extraction
+(free, no API key, no billing) is. This module is a higher-robustness
+alternative available if you want to switch back: it requires
+ANTHROPIC_API_KEY in the environment and the `anthropic` package
+installed (add it back to requirements.txt), and real API billing per
+call. To use it, swap webapp/app.py's import and /extract call from
+webapp.regex_extraction.extract_offer_fields_regex to
+extract_offer_fields below.
 """
 
 from __future__ import annotations
 
-from typing import List, Optional
+from typing import Optional
 
 import anthropic
-from pydantic import BaseModel
+
+from webapp.extraction_schema import ExtractedField, ExtractionResult  # noqa: F401 - re-exported for callers
 
 DEFAULT_MODEL = "claude-opus-5"
-
-
-class ExtractedField(BaseModel):
-    value: Optional[str] = None
-    source: str  # "hiring_approval" | "cv" | "passport" | "user"
-    confirmed_unavailable: bool = False
-
-
-class ConflictOption(BaseModel):
-    value: str
-    source: str
-
-
-class FieldConflict(BaseModel):
-    field: str
-    options: List[ConflictOption]
-
-
-class ExtractionResult(BaseModel):
-    business_unit_raw: Optional[str] = None
-    candidate_full_name: ExtractedField
-    candidate_first_name: Optional[ExtractedField] = None
-    candidate_phone_number: ExtractedField
-    candidate_email_address: ExtractedField
-    nationality: ExtractedField
-    job_title: ExtractedField
-    line_manager: ExtractedField
-    department: ExtractedField
-    notice_period: ExtractedField
-    total_salary: ExtractedField
-    conflicts: List[FieldConflict] = []
-    notes: List[str] = []
 
 
 SYSTEM_PROMPT = """You extract employment-offer fields from a hiring \
