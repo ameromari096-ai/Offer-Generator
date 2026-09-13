@@ -257,14 +257,30 @@ reference.
 ## Storage
 
 `finalize_offer` takes a `storage: offer_agent.storage.StorageBackend`.
-Use only the administrator-configured authenticated organizational
-storage connector available in this deployment — never invent a
-destination, and never use `offer_agent.storage.LocalDevStorageBackend`
-outside local development/tests (it is explicitly not an approved
-destination). If no real backend is configured,
-`offer_agent.storage.NotConfiguredStorageBackend` is used by default and
-every call raises `StorageError` — when you see that, stop and report the
-storage error rather than falling back to anything else.
+This deployment's configured destination is a Google Drive folder
+(https://drive.google.com/drive/folders/1ObSywx7unkdc8PCmUHE_vSFzG4F7-I4B),
+via `offer_agent.google_drive_storage.GoogleDriveStorageBackend`:
+
+```python
+from offer_agent.google_drive_storage import GoogleDriveStorageBackend
+storage = GoogleDriveStorageBackend.from_env()
+```
+
+`from_env()` reads `GDRIVE_SERVICE_ACCOUNT_FILE` (path to a Google service
+account JSON key) and optionally `GDRIVE_OFFER_FOLDER_ID` (defaults to
+this deployment's folder). It authenticates as that service account and
+never touches Drive's permissions API — it relies entirely on the
+folder's existing sharing (the service account must be shared on the
+folder as Editor; see README.md) and never creates a public or
+"anyone with the link" permission.
+
+Never invent a different destination, and never use
+`offer_agent.storage.LocalDevStorageBackend` outside local development or
+tests (it is explicitly not an approved destination). If the service
+account key or folder sharing isn't set up yet,
+`GoogleDriveStorageBackend`/`from_env()` raises `StorageError` — when you
+see that (or any other storage failure), stop and report the storage
+error rather than falling back to anything else.
 
 ## Tool output
 

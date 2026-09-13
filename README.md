@@ -49,14 +49,49 @@ Tests marked `slow` exercise a real LibreOffice DOCX→PDF conversion.
 
 `offer_agent.storage.StorageBackend` is the integration point for "the
 administrator-configured authenticated organizational storage action"
-the spec requires (e.g. a SharePoint/OneDrive/Google Drive connector).
-No destination is hard-coded here — implement `StorageBackend` against
-whatever authenticated connector this deployment has configured and pass
-it into `finalize_offer(...)`. `offer_agent.storage.LocalDevStorageBackend`
-is provided only for local development and tests; it is **not** an
-approved destination and must never be used to handle real candidate
-data. If no backend is configured, `NotConfiguredStorageBackend` makes
-every call fail loudly instead of silently falling back to a local path.
+the spec requires. `offer_agent.storage.LocalDevStorageBackend` is
+provided only for local development and tests; it is **not** an approved
+destination and must never be used to handle real candidate data. If no
+backend is configured, `NotConfiguredStorageBackend` makes every call
+fail loudly instead of silently falling back to a local path.
+
+This deployment's configured destination is a Google Drive folder:
+https://drive.google.com/drive/folders/1ObSywx7unkdc8PCmUHE_vSFzG4F7-I4B
+— implemented by `offer_agent.google_drive_storage.GoogleDriveStorageBackend`.
+
+It authenticates as a **service account** (not an interactive user login)
+so the agent can save files unattended. A service account only sees
+files/folders explicitly shared with it — sharing the link is not
+enough — so there's a one-time setup:
+
+1. In Google Cloud Console, create (or reuse) a project and enable the
+   **Google Drive API**.
+2. Create a **service account** in that project, then create and
+   download a JSON key for it.
+3. Open the destination folder in Drive and **share it with the service
+   account's email address** (the `client_email` field in the JSON key)
+   as **Editor**. This is the only permission change involved — the
+   backend itself never calls the Drive permissions API and never
+   creates a public or "anyone with the link" permission.
+4. Set two environment variables where the agent runs:
+   - `GDRIVE_SERVICE_ACCOUNT_FILE` — path to the downloaded JSON key.
+   - `GDRIVE_OFFER_FOLDER_ID` — optional; defaults to this deployment's
+     folder (`1ObSywx7unkdc8PCmUHE_vSFzG4F7-I4B`), parsed from the link
+     above via `offer_agent.google_drive_storage.folder_id_from_share_url`.
+
+Then construct it with zero arguments:
+
+```python
+from offer_agent.google_drive_storage import GoogleDriveStorageBackend
+
+storage = GoogleDriveStorageBackend.from_env()
+```
+
+Until that JSON key exists and the folder has been shared with the
+service account, calls will fail with a clear `StorageError` — per the
+spec, that's the correct behavior ("if no approved destination exists or
+access fails, stop and report the storage error") rather than falling
+back to local paths or personal storage.
 
 ## Minimal end-to-end example
 
@@ -64,7 +99,7 @@ every call fail loudly instead of silently falling back to a local path.
 from pathlib import Path
 from offer_agent.models import ResolvedOffer, FieldValue
 from offer_agent.reference import ReferenceStore
-from offer_agent.storage import LocalDevStorageBackend  # dev/test only
+from offer_agent.google_drive_storage import GoogleDriveStorageBackend
 from offer_agent.validation import validate_offer
 from offer_agent.preview import build_preview
 from offer_agent.workflow import finalize_offer, format_completion_output
@@ -95,7 +130,7 @@ outcome = finalize_offer(
     resolved,
     templates_dir=Path("templates"),
     reference_store=ReferenceStore(Path("data/reference_store.json")),
-    storage=LocalDevStorageBackend(Path("data/storage")),  # swap for real storage
+    storage=GoogleDriveStorageBackend.from_env(),
     audit_log_path=Path("data/audit.jsonl"),
     requested_by="hr@example.com",
 )
