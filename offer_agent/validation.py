@@ -63,7 +63,7 @@ def validate_offer(resolved: ResolvedOffer) -> ValidationResult:
 
     missing_fields: List[str] = []
     unresolved_placeholders: List[str] = []
-    warnings: List[str] = list()
+    warnings: List[str] = list(resolved.notes)
 
     conflicted_fields = {c.field for c in resolved.conflicts}
 

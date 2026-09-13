@@ -75,6 +75,11 @@ class ResolvedOffer:
     salary_override_monthly_basic: Optional[str] = None
     salary_override_monthly_supplementary: Optional[str] = None
     input_filenames: List[str] = field(default_factory=list)
+    notes: List[str] = field(default_factory=list)
+    """Disclosures that aren't literally user-typed overrides (e.g. a unit
+    conversion applied to a source value, such as "3 months" -> "90" days).
+    Surfaced under the preview's Warnings section — never silently baked
+    into a field's value without a trace."""
 
     def get(self, name: str) -> Optional[FieldValue]:
         return self.fields.get(name)

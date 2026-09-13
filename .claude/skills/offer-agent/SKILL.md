@@ -91,7 +91,23 @@ below "Notice Period" there. Do not take a notice period from the CV,
 passport, an email signature, previous-employment details, or any other
 part of the hiring approval. If you cannot find it under Contract Term
 Details, treat it as missing (see Errors below) — never substitute a
-value found elsewhere.
+value found elsewhere. A hiring approval can contain more than one
+"Notice Period" label in different sections (e.g. one under Contract
+Term Details, an unrelated one elsewhere, such as under general
+Remarks/Notes) — only the Contract Term Details one counts; ignore the
+rest even if they look more prominent or more recent.
+
+Both templates read `{{notice period}} calendar days in writing from
+either party` — the placeholder must therefore hold a bare number of
+**days**, nothing else. If the hiring approval states the notice period
+in months (e.g. "3 months"), convert it to calendar days (months × 30)
+before populating the placeholder — never insert "X months" literally.
+This is a computed transformation of the source value, not something the
+user typed, so disclose it via `resolved.notes` (e.g. `"Notice period:
+90 (converted from hiring approval's \"3 months\", months × 30)"`)
+rather than `user_overrides` — `notes` surfaces under the preview's
+Warnings section, keeping "User overrides" accurate as only what the
+user actually typed.
 
 For an equal-priority conflict (two sources at the same priority level
 disagree, or two passages within the same source disagree), do not pick
@@ -114,10 +130,11 @@ resolved = ResolvedOffer(
         "Total Salary": FieldValue(monthly_total, source),  # do not compute basic/supplementary yourself
     },
     conflicts=[FieldConflict(field="job title", options=[ConflictOption(value, source), ...])],
-    user_overrides={"job title": "..."},   # every field the user explicitly overrode, for the preview and audit
+    user_overrides={"job title": "..."},   # every field the user explicitly typed/overrode, for the preview and audit
     salary_override_monthly_basic=None,     # only if the user supplied an approved basic/supplementary split
     salary_override_monthly_supplementary=None,
     input_filenames=["hiring_approval.pdf", "cv.pdf", "passport.jpg"],
+    notes=[],   # computed transformations of a source value worth disclosing (e.g. a notice-period months->days conversion) — NOT user-typed values, those go in user_overrides
 )
 ```
 

@@ -60,3 +60,21 @@ def test_preview_shows_conflict_note_not_not_yet_provided():
     assert "Department: See conflicts below" in preview
     missing_section = preview.split("Missing fields:")[1].split("Unresolved placeholders:")[0]
     assert "Department" not in missing_section
+
+
+def test_notes_are_disclosed_as_warnings_not_user_overrides():
+    resolved = ResolvedOffer(
+        offer_id="offer-notice-period-conversion",
+        business_unit_raw="PureHealth",
+        fields=_base_fields(),
+        notes=['Notice period: 90 (converted from hiring approval\'s "3 months", months x 30)'],
+    )
+    validation = validate_offer(resolved)
+    preview = build_preview(resolved, validation)
+
+    assert "converted from hiring approval" in validation.warnings[0]
+    assert "converted from hiring approval" in preview
+    # It's a computed note, not something the user typed -> must not appear
+    # under "User overrides".
+    overrides_section = preview.split("User overrides:")[1].split("Missing fields:")[0]
+    assert "converted from hiring approval" not in overrides_section
