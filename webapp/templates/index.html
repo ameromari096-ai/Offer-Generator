@@ -1,16 +1,54 @@
 {% extends "base.html" %}
 {% block title %}New offer — Offer Agent{% endblock %}
 {% block content %}
+
+{% if extraction_error %}
+<div class="banner error">{{ extraction_error }}</div>
+{% endif %}
+
+{% if banner_notes %}
+<div class="banner">
+  <strong>Extraction results — review before continuing:</strong>
+  <ul style="margin:6px 0 0; padding-left:18px;">
+    {% for note in banner_notes %}
+    <li>{{ note }}</li>
+    {% endfor %}
+  </ul>
+</div>
+{% endif %}
+
 <div class="card">
+  <div class="section-title">Auto-fill from documents (optional)</div>
+  <form action="/extract" method="post" enctype="multipart/form-data">
+    <div class="row">
+      <div>
+        <label for="hiring_approval_file">Hiring approval (.pdf, .docx, .msg, .eml, .txt)</label>
+        <input type="file" name="hiring_approval_file" id="hiring_approval_file">
+      </div>
+      <div>
+        <label for="cv_file">Candidate CV (.pdf, .docx, .txt)</label>
+        <input type="file" name="cv_file" id="cv_file">
+      </div>
+    </div>
+    <label for="passport_file">Passport (optional — image or PDF; used only to verify name &amp; nationality)</label>
+    <input type="file" name="passport_file" id="passport_file">
+    <div class="actions">
+      <button type="submit">Extract from documents</button>
+    </div>
+  </form>
+</div>
+
+<div class="card">
+  <div class="section-title" style="margin-top:0;">Or fill in manually</div>
   <form action="/preview" method="post">
     <div class="section-title">Business unit &amp; requester</div>
     <div class="row">
       <div>
         <label for="business_unit">Business Unit *</label>
         <select name="business_unit" id="business_unit" required>
-          <option value="" disabled selected>Select…</option>
+          <option value="" {{ "selected" if not business_unit_prefill else "" }} disabled>Select…</option>
           {% for t in templates %}
-          <option value="{{ t.display_name }}">{{ t.display_name }} — {{ t.template_name }}</option>
+          <option value="{{ t.display_name }}" {{ "selected" if business_unit_prefill == t.display_name else "" }}>{{ t.display_name }} — {{ t.template_name }}</option>
           {% endfor %}
         </select>
       </div>
@@ -24,58 +62,58 @@
     <div class="row">
       <div>
         <label for="candidate_full_name">Full name *</label>
-        <input type="text" name="candidate_full_name" id="candidate_full_name" required>
+        <input type="text" name="candidate_full_name" id="candidate_full_name" value="{{ prefill.candidate_full_name if prefill else '' }}" required>
       </div>
       <div>
         <label for="candidate_first_name">First name (leave blank to derive automatically)</label>
-        <input type="text" name="candidate_first_name" id="candidate_first_name">
+        <input type="text" name="candidate_first_name" id="candidate_first_name" value="{{ prefill.candidate_first_name if prefill else '' }}">
       </div>
     </div>
     <div class="row">
       <div>
         <label for="candidate_phone">Phone *</label>
-        <input type="text" name="candidate_phone" id="candidate_phone">
+        <input type="text" name="candidate_phone" id="candidate_phone" value="{{ prefill.candidate_phone if prefill else '' }}">
         <span class="unavailable-toggle"><input type="checkbox" name="candidate_phone_unavailable"> Confirmed unavailable</span>
       </div>
       <div>
         <label for="candidate_email">Email *</label>
-        <input type="email" name="candidate_email" id="candidate_email">
+        <input type="email" name="candidate_email" id="candidate_email" value="{{ prefill.candidate_email if prefill else '' }}">
         <span class="unavailable-toggle"><input type="checkbox" name="candidate_email_unavailable"> Confirmed unavailable</span>
       </div>
     </div>
     <label for="nationality">Nationality * (never inferred — must be explicitly known)</label>
-    <input type="text" name="nationality" id="nationality">
+    <input type="text" name="nationality" id="nationality" value="{{ prefill.nationality if prefill else '' }}">
     <span class="unavailable-toggle"><input type="checkbox" name="nationality_unavailable"> Confirmed unavailable</span>
 
     <div class="section-title">Employment</div>
     <div class="row">
       <div>
         <label for="job_title">Job title *</label>
-        <input type="text" name="job_title" id="job_title">
+        <input type="text" name="job_title" id="job_title" value="{{ prefill.job_title if prefill else '' }}">
         <span class="unavailable-toggle"><input type="checkbox" name="job_title_unavailable"> Confirmed unavailable</span>
       </div>
       <div>
         <label for="line_manager">Line manager *</label>
-        <input type="text" name="line_manager" id="line_manager">
+        <input type="text" name="line_manager" id="line_manager" value="{{ prefill.line_manager if prefill else '' }}">
         <span class="unavailable-toggle"><input type="checkbox" name="line_manager_unavailable"> Confirmed unavailable</span>
       </div>
     </div>
     <div class="row">
       <div>
         <label for="department">Department *</label>
-        <input type="text" name="department" id="department">
+        <input type="text" name="department" id="department" value="{{ prefill.department if prefill else '' }}">
         <span class="unavailable-toggle"><input type="checkbox" name="department_unavailable"> Confirmed unavailable</span>
       </div>
       <div>
         <label for="notice_period">Notice period, in calendar days *</label>
-        <input type="text" name="notice_period" id="notice_period" placeholder="e.g. 90">
+        <input type="text" name="notice_period" id="notice_period" placeholder="e.g. 90" value="{{ prefill.notice_period if prefill else '' }}">
         <span class="unavailable-toggle"><input type="checkbox" name="notice_period_unavailable"> Confirmed unavailable</span>
       </div>
     </div>
 
     <div class="section-title">Salary (AED, monthly)</div>
     <label for="total_salary">Total Salary (monthly Proposed Salary) *</label>
-    <input type="text" name="total_salary" id="total_salary" placeholder="e.g. 20500">
+    <input type="text" name="total_salary" id="total_salary" placeholder="e.g. 20500" value="{{ prefill.total_salary if prefill else '' }}">
     <span class="unavailable-toggle"><input type="checkbox" name="total_salary_unavailable"> Confirmed unavailable</span>
 
     <div class="row">

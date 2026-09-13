@@ -2,9 +2,12 @@ FROM python:3.11-slim
 
 # libreoffice-core alone cannot load any document ("source file could not
 # be loaded") — the Writer component is required for DOCX->PDF conversion.
+# libemail-outlook-message-perl provides msgconvert, used to read uploaded
+# .msg (Outlook) hiring-approval emails.
 RUN apt-get update && apt-get install -y --no-install-recommends \
     libreoffice-writer \
     fonts-liberation \
+    libemail-outlook-message-perl \
     && rm -rf /var/lib/apt/lists/*
 
 WORKDIR /app
