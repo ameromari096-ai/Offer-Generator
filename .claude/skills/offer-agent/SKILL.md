@@ -274,30 +274,29 @@ reference.
 ## Storage
 
 `finalize_offer` takes a `storage: offer_agent.storage.StorageBackend`.
-This deployment's configured destination is a Google Drive folder
-(https://drive.google.com/drive/folders/1ObSywx7unkdc8PCmUHE_vSFzG4F7-I4B),
-via `offer_agent.google_drive_storage.GoogleDriveStorageBackend`:
+
+**Currently configured destination: local filesystem**, at
+`data/storage/`, via `offer_agent.storage.LocalDevStorageBackend` —
+explicitly chosen by the deployment owner so the agent runs without
+requiring the Google Drive service-account setup:
 
 ```python
-from offer_agent.google_drive_storage import GoogleDriveStorageBackend
-storage = GoogleDriveStorageBackend.from_env()
+from pathlib import Path
+from offer_agent.storage import LocalDevStorageBackend
+storage = LocalDevStorageBackend(Path("data/storage"))
 ```
 
-`from_env()` reads `GDRIVE_SERVICE_ACCOUNT_FILE` (path to a Google service
-account JSON key) and optionally `GDRIVE_OFFER_FOLDER_ID` (defaults to
-this deployment's folder). It authenticates as that service account and
-never touches Drive's permissions API — it relies entirely on the
-folder's existing sharing (the service account must be shared on the
-folder as Editor; see README.md) and never creates a public or
-"anyone with the link" permission.
+This deployment also has a Google Drive folder available
+(https://drive.google.com/drive/folders/1ObSywx7unkdc8PCmUHE_vSFzG4F7-I4B)
+via `offer_agent.google_drive_storage.GoogleDriveStorageBackend.from_env()`
+— switch to it once `GDRIVE_SERVICE_ACCOUNT_FILE` is set up (see
+README.md); it's the real "authenticated organizational storage"
+destination, local storage is an interim stand-in the owner explicitly
+approved, not a general-purpose fallback you may reach for on your own.
 
-Never invent a different destination, and never use
-`offer_agent.storage.LocalDevStorageBackend` outside local development or
-tests (it is explicitly not an approved destination). If the service
-account key or folder sharing isn't set up yet,
-`GoogleDriveStorageBackend`/`from_env()` raises `StorageError` — when you
-see that (or any other storage failure), stop and report the storage
-error rather than falling back to anything else.
+Never invent a third destination. If whichever backend is configured
+fails (local disk full/unwritable, or a Drive auth/API error), stop and
+report the storage error rather than falling back to anything else.
 
 ## Tool output
 
