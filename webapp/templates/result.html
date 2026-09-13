@@ -1,0 +1,24 @@
+{% extends "base.html" %}
+{% block title %}Result — Offer Agent{% endblock %}
+{% block content %}
+<div class="card">
+  {% if outcome.success %}
+    <h2 style="margin-top:0; color:#0f6b4c;">Employment contract created</h2>
+  {% else %}
+    <h2 style="margin-top:0; color:#b3261e;">Not created</h2>
+    <div class="banner error">{{ outcome.error_code }}: {{ outcome.error_message }}</div>
+  {% endif %}
+
+  <pre class="preview">{{ completion_text }}</pre>
+
+  {% if outcome.success %}
+  <div class="section-title">Downloads</div>
+  <a class="download-btn" href="{{ url_for('download', filename=outcome.docx_filename) }}">Download Word (.docx)</a>
+  <a class="download-btn" href="{{ url_for('download', filename=outcome.pdf_filename) }}">Download PDF</a>
+  {% endif %}
+
+  <div class="actions">
+    <a href="/"><button type="button" class="secondary">Start another offer</button></a>
+  </div>
+</div>
+{% endblock %}

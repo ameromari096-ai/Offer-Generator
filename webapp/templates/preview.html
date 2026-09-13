@@ -1,0 +1,30 @@
+{% extends "base.html" %}
+{% block title %}Preview — Offer Agent{% endblock %}
+{% block content %}
+<div class="card">
+  <h2 style="margin-top:0;">Mandatory preview</h2>
+  {% if not can_finalize %}
+  <div class="banner error">
+    This offer is <strong>not</strong> ready to approve yet — resolve the missing fields
+    and/or conflicts shown below, then go back and correct them.
+  </div>
+  {% else %}
+  <div class="banner">
+    Nothing is created yet. Review carefully — approving will generate one
+    permanent two-digit reference and both contract files.
+  </div>
+  {% endif %}
+
+  <pre class="preview">{{ preview_text }}</pre>
+
+  <div class="actions">
+    {% if can_finalize %}
+    <form action="/approve" method="post" style="display:inline;">
+      <input type="hidden" name="offer_json" value='{{ offer_json | e }}'>
+      <button type="submit">Approve and create</button>
+    </form>
+    {% endif %}
+    <a href="/"><button type="button" class="secondary">{{ "Correct a field" if not can_finalize else "Cancel" }}</button></a>
+  </div>
+</div>
+{% endblock %}
