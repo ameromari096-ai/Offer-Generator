@@ -9,6 +9,7 @@ from __future__ import annotations
 from typing import Optional
 
 from . import fields as fields_module
+from .dates import format_offer_date
 from .models import ResolvedOffer
 from .salary import format_aed
 from .validation import ValidationResult
@@ -104,7 +105,7 @@ def build_preview(resolved: ResolvedOffer, validation: ValidationResult) -> str:
         f"  Business Unit: {business_unit_display}",
         f"  Template: {template_name}",
         f"  Notice period: {_val(resolved, 'notice period')}",
-        f"  Offer date: {_val(resolved, 'date')}",
+        f"  Offer date: {format_offer_date()} (set fresh at document creation; may shift if approval happens on a later date)",
         "",
         "Monthly compensation:",
         f"  Basic salary: {monthly_basic}",
