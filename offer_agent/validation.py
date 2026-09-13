@@ -65,7 +65,13 @@ def validate_offer(resolved: ResolvedOffer) -> ValidationResult:
     unresolved_placeholders: List[str] = []
     warnings: List[str] = list()
 
+    conflicted_fields = {c.field for c in resolved.conflicts}
+
     for name in NON_SALARY_MANDATORY_FIELDS:
+        if name in conflicted_fields:
+            # Not missing: candidate values were found, they just disagree.
+            # The conflict list itself is what blocks finalization.
+            continue
         fv = resolved.get(name)
         if fv is None or (fv.value in (None, "") and not fv.confirmed_unavailable):
             missing_fields.append(name)

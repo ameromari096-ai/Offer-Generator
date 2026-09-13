@@ -17,7 +17,9 @@ from .validation import ValidationResult
 OFFER_ONLY_OPTIONS = ("Approve and create", "Correct a field", "Cancel")
 
 
-def _val(resolved: ResolvedOffer, name: str) -> str:
+def _val(resolved: ResolvedOffer, name: str, conflicted_fields: frozenset = frozenset()) -> str:
+    if name in conflicted_fields:
+        return "See conflicts below — selection required"
     fv = resolved.get(name)
     if fv is None:
         return "Not yet provided"
@@ -90,21 +92,23 @@ def build_preview(resolved: ResolvedOffer, validation: ValidationResult) -> str:
         options = "; ".join(f"{o.value} ({o.source})" for o in conflict.options)
         conflict_lines.append(f"{fields_module.label_for(conflict.field)}: {options} — selection required")
 
+    conflicted_fields = frozenset(c.field for c in validation.conflicts)
+
     sections = [
         "Candidate:",
-        f"  Full name: {_val(resolved, 'candidate full name')}",
-        f"  First name: {_val(resolved, 'candidate first name')}",
-        f"  Phone: {_val(resolved, 'candidate phone number')}",
-        f"  Email: {_val(resolved, 'candidate email address')}",
-        f"  Nationality: {_val(resolved, 'nationality')}",
+        f"  Full name: {_val(resolved, 'candidate full name', conflicted_fields)}",
+        f"  First name: {_val(resolved, 'candidate first name', conflicted_fields)}",
+        f"  Phone: {_val(resolved, 'candidate phone number', conflicted_fields)}",
+        f"  Email: {_val(resolved, 'candidate email address', conflicted_fields)}",
+        f"  Nationality: {_val(resolved, 'nationality', conflicted_fields)}",
         "",
         "Employment:",
-        f"  Job title: {_val(resolved, 'job title')}",
-        f"  Line manager: {_val(resolved, 'line manager')}",
-        f"  Department: {_val(resolved, 'department')}",
+        f"  Job title: {_val(resolved, 'job title', conflicted_fields)}",
+        f"  Line manager: {_val(resolved, 'line manager', conflicted_fields)}",
+        f"  Department: {_val(resolved, 'department', conflicted_fields)}",
         f"  Business Unit: {business_unit_display}",
         f"  Template: {template_name}",
-        f"  Notice period: {_val(resolved, 'notice period')}",
+        f"  Notice period: {_val(resolved, 'notice period', conflicted_fields)}",
         f"  Offer date: {format_offer_date()} (set fresh at document creation; may shift if approval happens on a later date)",
         "",
         "Monthly compensation:",
