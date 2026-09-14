@@ -41,22 +41,14 @@
 <div class="card">
   <div class="section-title" style="margin-top:0;">Or fill in manually</div>
   <form action="/preview" method="post">
-    <div class="section-title">Business unit &amp; requester</div>
-    <div class="row">
-      <div>
-        <label for="business_unit">Business Unit *</label>
-        <select name="business_unit" id="business_unit">
-          <option value="" {{ "selected" if not business_unit_prefill else "" }} disabled>Select…</option>
-          {% for t in templates %}
-          <option value="{{ t.display_name }}" {{ "selected" if business_unit_prefill == t.display_name else "" }}>{{ t.display_name }} — {{ t.template_name }}</option>
-          {% endfor %}
-        </select>
-      </div>
-      <div>
-        <label for="requested_by">Your email (for the audit record) *</label>
-        <input type="email" name="requested_by" id="requested_by">
-      </div>
-    </div>
+    <div class="section-title">Business unit</div>
+    <label for="business_unit">Business Unit *</label>
+    <select name="business_unit" id="business_unit">
+      <option value="" {{ "selected" if not business_unit_prefill else "" }} disabled>Select…</option>
+      {% for t in templates %}
+      <option value="{{ t.display_name }}" {{ "selected" if business_unit_prefill == t.display_name else "" }}>{{ t.display_name }} — {{ t.template_name }}</option>
+      {% endfor %}
+    </select>
 
     <div class="section-title">Candidate</div>
     <div class="row">
