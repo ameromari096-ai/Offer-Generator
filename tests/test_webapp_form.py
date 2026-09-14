@@ -5,14 +5,18 @@ instead of a vague browser tooltip, and lets an upload-then-partially-filled
 form still reach the preview for review.
 """
 
+import re
 from pathlib import Path
 
 INDEX_TEMPLATE = Path(__file__).resolve().parent.parent / "webapp" / "templates" / "index.html"
 
+_SCRIPT_BLOCK = re.compile(r"<script\b[^>]*>.*?</script>", re.IGNORECASE | re.DOTALL)
+
 
 def test_index_template_has_no_required_attributes():
     html = INDEX_TEMPLATE.read_text()
-    assert " required" not in html, "index.html must not use HTML5 required= attributes"
+    markup_only = _SCRIPT_BLOCK.sub("", html)  # JS prose may legitimately contain the word "required"
+    assert " required" not in markup_only, "index.html must not use HTML5 required= attributes"
 
 
 def test_preview_accepts_a_completely_empty_submission():

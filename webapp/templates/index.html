@@ -23,15 +23,33 @@
     <div class="row">
       <div>
         <label for="hiring_approval_file">Hiring approval (.pdf, .docx, .msg, .eml, .txt)</label>
-        <input type="file" name="hiring_approval_file" id="hiring_approval_file">
+        <div class="dropzone">
+          <input type="file" name="hiring_approval_file" id="hiring_approval_file" accept=".pdf,.docx,.msg,.eml,.txt">
+          <div class="dropzone-hint">
+            <span class="dropzone-label">Drag &amp; drop, or <span class="dropzone-browse">browse</span></span>
+            <span class="dropzone-filename"></span>
+          </div>
+        </div>
       </div>
       <div>
         <label for="cv_file">Candidate CV (.pdf, .docx, .txt)</label>
-        <input type="file" name="cv_file" id="cv_file">
+        <div class="dropzone">
+          <input type="file" name="cv_file" id="cv_file" accept=".pdf,.docx,.txt">
+          <div class="dropzone-hint">
+            <span class="dropzone-label">Drag &amp; drop, or <span class="dropzone-browse">browse</span></span>
+            <span class="dropzone-filename"></span>
+          </div>
+        </div>
       </div>
     </div>
     <label for="passport_file">Passport (optional — image or PDF; used only to verify name &amp; nationality)</label>
-    <input type="file" name="passport_file" id="passport_file">
+    <div class="dropzone">
+      <input type="file" name="passport_file" id="passport_file" accept=".pdf,.txt,.png,.jpg,.jpeg,.webp,.gif">
+      <div class="dropzone-hint">
+        <span class="dropzone-label">Drag &amp; drop, or <span class="dropzone-browse">browse</span></span>
+        <span class="dropzone-filename"></span>
+      </div>
+    </div>
     <div class="actions">
       <button type="submit">Extract from documents</button>
     </div>
@@ -124,4 +142,37 @@
     </div>
   </form>
 </div>
+
+<script>
+  document.querySelectorAll('.dropzone').forEach(function (zone) {
+    var input = zone.querySelector('input[type=file]');
+    var filenameEl = zone.querySelector('.dropzone-filename');
+
+    function updateFilename() {
+      filenameEl.textContent = input.files.length ? input.files[0].name : '';
+    }
+    input.addEventListener('change', updateFilename);
+
+    ['dragenter', 'dragover'].forEach(function (evt) {
+      zone.addEventListener(evt, function (e) {
+        e.preventDefault(); // required so the browser accepts the drop at all
+        zone.classList.add('dragover');
+      });
+    });
+    zone.addEventListener('dragleave', function () {
+      zone.classList.remove('dragover');
+    });
+    zone.addEventListener('drop', function (e) {
+      // A plain <input type=file> does NOT auto-populate from a drop even
+      // when it's the element underneath the cursor - the file must be
+      // assigned explicitly from the DragEvent's DataTransfer.
+      e.preventDefault();
+      zone.classList.remove('dragover');
+      if (e.dataTransfer && e.dataTransfer.files && e.dataTransfer.files.length) {
+        input.files = e.dataTransfer.files;
+        input.dispatchEvent(new Event('change', { bubbles: true }));
+      }
+    });
+  });
+</script>
 {% endblock %}
