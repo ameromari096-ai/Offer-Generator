@@ -168,7 +168,34 @@
     .dropzone-hint { pointer-events: none; }
     .dropzone-label { display: block; font-size: 13px; color: var(--muted); }
     .dropzone-browse { color: var(--accent); font-weight: 600; text-decoration: underline; }
-    .dropzone-filename { display: block; margin-top: 4px; font-size: 13px; font-weight: 600; color: var(--text); word-break: break-all; }
+    .dropzone-file {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      margin-top: 2px;
+      max-width: 100%;
+    }
+    .dropzone-file[hidden] { display: none; }
+    .dropzone-filename { font-size: 13px; font-weight: 600; color: var(--text); word-break: break-all; }
+    .dropzone-remove {
+      /* Overrides the generic `button` rule: small, circular, and above
+         the covering file input so it's actually clickable. */
+      pointer-events: auto;
+      position: relative;
+      z-index: 2;
+      flex-shrink: 0;
+      width: 18px;
+      height: 18px;
+      padding: 0;
+      border: none;
+      border-radius: 50%;
+      background: var(--border);
+      color: var(--text);
+      font-size: 13px;
+      line-height: 18px;
+      cursor: pointer;
+    }
+    .dropzone-remove:hover { background: var(--danger-border); color: var(--danger); }
   </style>
 </head>
 <body>

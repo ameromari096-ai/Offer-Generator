@@ -27,7 +27,10 @@
           <input type="file" name="hiring_approval_file" id="hiring_approval_file" accept=".pdf,.docx,.msg,.eml,.txt">
           <div class="dropzone-hint">
             <span class="dropzone-label">Drag &amp; drop, or <span class="dropzone-browse">browse</span></span>
-            <span class="dropzone-filename"></span>
+            <span class="dropzone-file" hidden>
+              <span class="dropzone-filename"></span>
+              <button type="button" class="dropzone-remove" aria-label="Remove file">&times;</button>
+            </span>
           </div>
         </div>
       </div>
@@ -37,7 +40,10 @@
           <input type="file" name="cv_file" id="cv_file" accept=".pdf,.docx,.txt">
           <div class="dropzone-hint">
             <span class="dropzone-label">Drag &amp; drop, or <span class="dropzone-browse">browse</span></span>
-            <span class="dropzone-filename"></span>
+            <span class="dropzone-file" hidden>
+              <span class="dropzone-filename"></span>
+              <button type="button" class="dropzone-remove" aria-label="Remove file">&times;</button>
+            </span>
           </div>
         </div>
       </div>
@@ -47,7 +53,10 @@
       <input type="file" name="passport_file" id="passport_file" accept=".pdf,.txt,.png,.jpg,.jpeg,.webp,.gif">
       <div class="dropzone-hint">
         <span class="dropzone-label">Drag &amp; drop, or <span class="dropzone-browse">browse</span></span>
-        <span class="dropzone-filename"></span>
+        <span class="dropzone-file" hidden>
+          <span class="dropzone-filename"></span>
+          <button type="button" class="dropzone-remove" aria-label="Remove file">&times;</button>
+        </span>
       </div>
     </div>
     <div class="actions">
@@ -146,12 +155,28 @@
 <script>
   document.querySelectorAll('.dropzone').forEach(function (zone) {
     var input = zone.querySelector('input[type=file]');
+    var labelEl = zone.querySelector('.dropzone-label');
+    var fileEl = zone.querySelector('.dropzone-file');
     var filenameEl = zone.querySelector('.dropzone-filename');
+    var removeBtn = zone.querySelector('.dropzone-remove');
 
     function updateFilename() {
-      filenameEl.textContent = input.files.length ? input.files[0].name : '';
+      var hasFile = input.files.length > 0;
+      filenameEl.textContent = hasFile ? input.files[0].name : '';
+      fileEl.hidden = !hasFile;
+      labelEl.hidden = hasFile;
     }
     input.addEventListener('change', updateFilename);
+
+    removeBtn.addEventListener('click', function (e) {
+      // The transparent <input> covers the whole dropzone, so without this
+      // the click would otherwise be intercepted by it (opening the file
+      // picker) instead of just clearing the selection.
+      e.preventDefault();
+      e.stopPropagation();
+      input.value = '';
+      updateFilename();
+    });
 
     ['dragenter', 'dragover'].forEach(function (evt) {
       zone.addEventListener(evt, function (e) {
