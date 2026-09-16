@@ -22,9 +22,10 @@ This repository is the implementation behind that skill:
   (`PureHealth_Employment_Contract.docx`, `TalentOne_Employment_Contract.docx`).
 - `tests/` — unit and end-to-end tests.
 - `webapp/` — a small Flask front-end over the same engine, for driving
-  it from a browser form instead of a chat session (no automated
-  CV/hiring-approval extraction — you type the resolved values in
-  directly). See "Web app" below.
+  it from a browser form instead of a chat session (with a free,
+  no-API-key document auto-fill — see "Web app" below).
+- `desktop/` — the same web app packaged as a native Windows desktop
+  app instead of a hosted website. See "Windows desktop app" below.
 
 ## Setup
 
@@ -120,6 +121,60 @@ Notes:
   variable, no billing. (If you've switched to the LLM-based extractor
   instead, set `ANTHROPIC_API_KEY` under Dashboard → your service →
   Environment.)
+
+## Windows desktop app
+
+A public web deployment means anyone who gets hold of the link can
+generate real contracts with salary data. `desktop/app.py` sidesteps that
+entirely: the exact same Flask app runs **only on `127.0.0.1`, on a
+random free port** — nothing is ever reachable from outside the machine
+it's running on, no link exists to leak — wrapped in a native window via
+[pywebview](https://pywebview.flowrl.com/) instead of a browser tab.
+Storage is local (same `LocalDevStorageBackend`), extraction is the same
+free regex-based extractor — no API keys anywhere in this build.
+
+### Getting the app
+
+Every push to this branch builds a Windows executable via
+[`.github/workflows/build-windows.yml`](.github/workflows/build-windows.yml)
+on a `windows-latest` GitHub Actions runner (this repo has no Windows
+machine to build on directly, so CI is the actual build environment).
+Grab it from the repo's **Actions** tab → the latest **Build Windows
+desktop app** run → the `OfferAgent-windows` artifact at the bottom of
+the run's summary page → unzip to get `OfferAgent.exe`.
+
+**Prerequisite: LibreOffice.** The exe does not bundle it (bundling a
+full office suite would make the download enormous) — install it
+separately from [libreoffice.org/download](https://www.libreoffice.org/download/)
+if it isn't already on the machine. `docx_to_pdf.py` checks both PATH and
+the standard `Program Files\LibreOffice\program\soffice.exe` install
+location automatically.
+
+Double-click `OfferAgent.exe` to launch. Generated contracts, the
+reference store, and the audit log are saved under
+`%APPDATA%\OfferAgent\` (a normal per-user folder, not inside the exe).
+
+**Honesty note:** I verified the PyInstaller build succeeds in CI and
+separately verified the frozen-path logic (bundled templates vs. the
+writable `%APPDATA%` data directory) by simulating that environment —
+but I have no Windows machine to actually launch the built `.exe` and
+click through it myself. If the window doesn't open or looks wrong on
+first run, it's most likely the
+[WebView2 Runtime](https://developer.microsoft.com/microsoft-edge/webview2/)
+pywebview depends on — it ships with Windows 11 and most updated Windows
+10 installs already, but install it if missing. Report anything else you
+hit; CI catching a build failure and a real user's first launch are two
+different kinds of "it works."
+
+### Building it yourself
+
+```powershell
+pip install -r desktop/requirements.txt pyinstaller
+pyinstaller --onefile --windowed --name OfferAgent `
+  --add-data "templates;templates" `
+  --add-data "webapp/templates;webapp/templates" `
+  desktop/app.py
+```
 
 ## Wiring up real storage
 
