@@ -14,48 +14,36 @@ run.
 
 from __future__ import annotations
 
-import json
 import os
-import re
-import uuid
+import sys
 from pathlib import Path
 
 from flask import Flask, abort, render_template, request, send_from_directory
 
-import sys
-
 sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
 
 from offer_agent import fields as fields_module
-from offer_agent.models import FieldValue, ResolvedOffer
 from offer_agent.preview import build_preview
 from offer_agent.reference import ReferenceStore
 from offer_agent.storage import LocalDevStorageBackend
 from offer_agent.validation import validate_offer
 from offer_agent.workflow import finalize_offer, format_completion_output
 from webapp.document_parsing import DocumentParseError, extract_text, is_image
-from webapp.extraction_schema import ExtractionResult
+from webapp.offer_form import (
+    MANDATORY_FIELDS,
+    deserialize_offer,
+    map_extraction_to_prefill,
+    resolved_offer_from_mapping,
+    serialize_offer,
+)
+from webapp.paths import AUDIT_LOG_PATH, REFERENCE_STORE_PATH, STORAGE_DIR, TEMPLATES_DIR
 from webapp.regex_extraction import extract_offer_fields_regex
 
-# When PyInstaller-frozen (the Windows desktop build), bundled read-only
-# resources (this package, the docx templates) live under sys._MEIPASS,
-# extracted fresh into a temp dir each run - never a place to write
-# generated contracts, the reference store, or the audit log. Those go to
-# a writable per-user directory instead. Unfrozen (normal dev / the web
-# deployment), behavior is unchanged: everything lives under the repo.
-if getattr(sys, "frozen", False):
-    BASE_DIR = Path(getattr(sys, "_MEIPASS", Path(sys.executable).resolve().parent))
-    DATA_DIR = Path(os.environ.get("APPDATA") or Path.home()) / "OfferAgent"
-else:
-    BASE_DIR = Path(__file__).resolve().parent.parent
-    DATA_DIR = BASE_DIR / "data"
-
-STORAGE_DIR = DATA_DIR / "storage"
-TEMPLATES_DIR = BASE_DIR / "templates"
-REFERENCE_STORE_PATH = DATA_DIR / "reference_store.json"
-AUDIT_LOG_PATH = DATA_DIR / "audit.jsonl"
-
 app = Flask(__name__)
+
+from webapp.api import api as api_blueprint  # noqa: E402 - after app creation, avoids a circular import
+
+app.register_blueprint(api_blueprint)
 
 
 def _default_storage_backend():
@@ -70,170 +58,23 @@ def _default_storage_backend():
 app.config.setdefault("STORAGE_BACKEND_FACTORY", _default_storage_backend)
 app.config.setdefault("STORAGE_LABEL", "local")
 
+# If SHAREPOINT_TENANT_ID etc. are set in the environment (e.g. as Render
+# secrets, or on any other server this app is hosted on for the Power Apps
+# UI shell), switch to SharePoint storage. Left unset, behavior is
+# unchanged - LocalDevStorageBackend, same as before this existed.
+if os.environ.get("SHAREPOINT_TENANT_ID"):
+    from offer_agent.sharepoint_storage import SharePointStorageBackend
+
+    def _sharepoint_factory():
+        return SharePointStorageBackend.from_env()
+
+    app.config["STORAGE_BACKEND_FACTORY"] = _sharepoint_factory
+    app.config["STORAGE_LABEL"] = "sharepoint"
+
 
 @app.context_processor
 def _inject_storage_label():
     return {"storage_label": app.config.get("STORAGE_LABEL", "local")}
-
-MANDATORY_FIELDS = [
-    ("candidate_full_name", "candidate full name", "Candidate full name"),
-    ("candidate_phone", "candidate phone number", "Candidate phone number"),
-    ("candidate_email", "candidate email address", "Candidate email address"),
-    ("nationality", "nationality", "Nationality"),
-    ("job_title", "job title", "Job title"),
-    ("line_manager", "line manager", "Line manager"),
-    ("department", "department", "Department"),
-    ("notice_period", "notice period", "Notice period (calendar days)"),
-]
-
-_TITLE_PATTERN = re.compile(r"^(mr|mrs|ms|miss|dr|prof)\.?\s+", re.IGNORECASE)
-
-# Maps both the ExtractionResult attribute name and its space-separated
-# placeholder-style alias to the web form's field key.
-_ATTR_TO_FORM_KEY = {
-    "candidate_full_name": "candidate_full_name",
-    "candidate full name": "candidate_full_name",
-    "candidate_first_name": "candidate_first_name",
-    "candidate first name": "candidate_first_name",
-    "candidate_phone_number": "candidate_phone",
-    "candidate phone number": "candidate_phone",
-    "candidate_email_address": "candidate_email",
-    "candidate email address": "candidate_email",
-    "nationality": "nationality",
-    "job_title": "job_title",
-    "job title": "job_title",
-    "line_manager": "line_manager",
-    "line manager": "line_manager",
-    "department": "department",
-    "notice_period": "notice_period",
-    "notice period": "notice_period",
-    "total_salary": "total_salary",
-    "total salary": "total_salary",
-    "business_unit_raw": "business_unit",
-    "business unit": "business_unit",
-}
-
-
-def _map_extraction_to_prefill(result: ExtractionResult):
-    """Turn an ExtractionResult into (prefill dict, business_unit_display, banner_notes)."""
-    prefill = {
-        "candidate_full_name": result.candidate_full_name.value or "",
-        "candidate_first_name": (result.candidate_first_name.value if result.candidate_first_name else "") or "",
-        "candidate_phone": result.candidate_phone_number.value or "",
-        "candidate_email": result.candidate_email_address.value or "",
-        "nationality": result.nationality.value or "",
-        "job_title": result.job_title.value or "",
-        "line_manager": result.line_manager.value or "",
-        "department": result.department.value or "",
-        "notice_period": result.notice_period.value or "",
-        "total_salary": result.total_salary.value or "",
-    }
-
-    banner_notes = list(result.notes)
-    conflicted_keys = set()
-    for conflict in result.conflicts:
-        form_key = _ATTR_TO_FORM_KEY.get(conflict.field.strip())
-        if form_key:
-            conflicted_keys.add(form_key)
-        options = "; ".join(f'"{o.value}" ({o.source})' for o in conflict.options)
-        banner_notes.append(f'Conflict on "{conflict.field}": {options} — please choose manually below.')
-
-    for key in conflicted_keys:
-        if key in prefill:
-            prefill[key] = ""
-
-    business_unit_display = None
-    if "business_unit" not in conflicted_keys and result.business_unit_raw:
-        template = fields_module.resolve_template(result.business_unit_raw)
-        if template:
-            business_unit_display = template.display_name
-        else:
-            banner_notes.append(
-                f'Business Unit "{result.business_unit_raw}" from the hiring approval did not '
-                "match PureHealth or TalentOne exactly — please select it manually."
-            )
-
-    return prefill, business_unit_display, banner_notes
-
-
-def derive_first_name(full_name: str) -> str:
-    stripped = _TITLE_PATTERN.sub("", full_name.strip())
-    return stripped.split(" ")[0] if stripped else ""
-
-
-def _resolved_offer_from_form(form) -> ResolvedOffer:
-    offer_id = form.get("offer_id") or f"web-{uuid.uuid4().hex[:12]}"
-    business_unit_raw = form.get("business_unit", "").strip()
-
-    field_values = {}
-    for form_key, placeholder, _label in MANDATORY_FIELDS:
-        value = form.get(form_key, "").strip()
-        unavailable = form.get(f"{form_key}_unavailable") == "on"
-        if unavailable:
-            field_values[placeholder] = FieldValue(None, "user", confirmed_unavailable=True)
-        elif value:
-            field_values[placeholder] = FieldValue(value, "user")
-        # else: leave absent -> reported as missing by validate_offer
-
-    first_name = form.get("candidate_first_name", "").strip()
-    full_name = form.get("candidate_full_name", "").strip()
-    if not first_name and full_name:
-        first_name = derive_first_name(full_name)
-    if first_name:
-        field_values["candidate first name"] = FieldValue(first_name, "user")
-
-    total_salary = form.get("total_salary", "").strip()
-    total_salary_unavailable = form.get("total_salary_unavailable") == "on"
-    if total_salary_unavailable:
-        field_values["Total Salary"] = FieldValue(None, "user", confirmed_unavailable=True)
-    elif total_salary:
-        field_values["Total Salary"] = FieldValue(total_salary, "user")
-
-    override_basic = form.get("override_basic", "").strip() or None
-    override_supplementary = form.get("override_supplementary", "").strip() or None
-
-    return ResolvedOffer(
-        offer_id=offer_id,
-        business_unit_raw=business_unit_raw or None,
-        fields=field_values,
-        salary_override_monthly_basic=override_basic,
-        salary_override_monthly_supplementary=override_supplementary,
-        input_filenames=["manual-web-entry"],
-    )
-
-
-def _serialize_offer(resolved: ResolvedOffer) -> str:
-    payload = {
-        "offer_id": resolved.offer_id,
-        "business_unit_raw": resolved.business_unit_raw,
-        "fields": {
-            name: {"value": fv.value, "source": fv.source, "confirmed_unavailable": fv.confirmed_unavailable}
-            for name, fv in resolved.fields.items()
-        },
-        "salary_override_monthly_basic": resolved.salary_override_monthly_basic,
-        "salary_override_monthly_supplementary": resolved.salary_override_monthly_supplementary,
-        "input_filenames": resolved.input_filenames,
-        "requested_by": request.form.get("requested_by", "").strip(),
-    }
-    return json.dumps(payload)
-
-
-def _deserialize_offer(raw: str) -> tuple[ResolvedOffer, str]:
-    payload = json.loads(raw)
-    fields_out = {
-        name: FieldValue(v["value"], v["source"], confirmed_unavailable=v["confirmed_unavailable"])
-        for name, v in payload["fields"].items()
-    }
-    resolved = ResolvedOffer(
-        offer_id=payload["offer_id"],
-        business_unit_raw=payload["business_unit_raw"],
-        fields=fields_out,
-        salary_override_monthly_basic=payload["salary_override_monthly_basic"],
-        salary_override_monthly_supplementary=payload["salary_override_monthly_supplementary"],
-        input_filenames=payload["input_filenames"],
-    )
-    return resolved, payload.get("requested_by") or "web-user"
-
 
 @app.route("/", methods=["GET"])
 def index():
@@ -301,7 +142,7 @@ def extract():
             extraction_error=f"Automatic extraction failed: {exc}",
         )
 
-    prefill, business_unit_display, banner_notes = _map_extraction_to_prefill(result)
+    prefill, business_unit_display, banner_notes = map_extraction_to_prefill(result)
     if passport_image_note:
         banner_notes.append(passport_image_note)
 
@@ -317,10 +158,10 @@ def extract():
 
 @app.route("/preview", methods=["POST"])
 def preview():
-    resolved = _resolved_offer_from_form(request.form)
+    resolved = resolved_offer_from_mapping(request.form)
     validation = validate_offer(resolved)
     preview_text = build_preview(resolved, validation)
-    offer_json = _serialize_offer(resolved)
+    offer_json = serialize_offer(resolved, request.form.get("requested_by", "").strip())
     return render_template(
         "preview.html",
         preview_text=preview_text,
@@ -335,7 +176,7 @@ def approve():
     if not offer_json:
         abort(400, "Missing offer data; please start over.")
 
-    resolved, requested_by = _deserialize_offer(offer_json)
+    resolved, requested_by = deserialize_offer(offer_json)
 
     reference_store = ReferenceStore(REFERENCE_STORE_PATH)
     storage = app.config["STORAGE_BACKEND_FACTORY"]()

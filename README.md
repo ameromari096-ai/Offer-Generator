@@ -318,6 +318,140 @@ generated contract's actual size, but worth knowing if a future template
 grows much larger (would need the resumable upload-session API instead,
 which this backend does not implement).
 
+## Power Apps front end
+
+If your org's Power Automate doesn't have Premium (needed for "Populate a
+Microsoft Word Template"), a fully native Power Platform rebuild isn't an
+option — but a Power Apps **canvas app can still be the only front door**
+to this engine, with none of the actual document logic reimplemented in
+Power Fx. `webapp/api.py` adds a small JSON API on top of the exact same,
+already-tested engine the browser UI and desktop app use; the canvas app
+just calls it. This still satisfies "no public access": a canvas app
+published inside your PureHealth tenant is only reachable by users signed
+into that tenant (Entra ID), which is the same access boundary you were
+after with the desktop app — this just gets you there without needing a
+Windows build per user.
+
+**Why this isn't "the website again":** the concern before was an
+anonymous public form anyone with the link could submit. `/api/*` has no
+HTML form at all — it only accepts requests carrying a matching
+`X-API-Key` header, and refuses to serve *anything* if that key isn't
+configured on the server (fails closed, not open). That key lives only in
+the Power Automate custom connector's connection (server-side), never in
+the canvas app's client-side code, so a leaked app link still can't reach
+the API without both the Entra ID sign-in *and* the key.
+
+### 1. Deploy the engine somewhere Power Automate can reach
+
+Any of the existing deployment options work as the API's host — e.g. the
+same [Render deployment](#deploy-it-docker--render) above. On that host,
+set:
+
+- `OFFER_AGENT_API_KEY` — any long random string you generate yourself
+  (e.g. `python -c "import secrets; print(secrets.token_urlsafe(32))"`).
+  Required — without it, every `/api/*` route returns `503`.
+- `SHAREPOINT_TENANT_ID`, `SHAREPOINT_CLIENT_ID`, `SHAREPOINT_CLIENT_SECRET`,
+  `SHAREPOINT_SITE_URL` (and optionally `SHAREPOINT_FOLDER_PATH` /
+  `SHAREPOINT_DRIVE_NAME`) — from the **SharePoint instead** section
+  above. Recommended for this deployment specifically: `/api/approve`'s
+  response then links straight to the SharePoint copy, gated by your
+  site's own permissions, rather than to a file sitting on the Render
+  host.
+
+If you'd rather not expose the plain HTML routes (`/`, `/extract`,
+`/preview`, `/approve`) alongside the API on the same public host, say so
+and I'll gate or remove them for this deployment — they're unauthenticated
+today, which was fine when the only alternative was "don't deploy it as a
+website at all," but doesn't need to stay that way now that the API is
+the actual front door.
+
+### 2. Routes
+
+All under `/api`, all requiring the `X-API-Key` header:
+
+| Route | Method | Purpose |
+|---|---|---|
+| `/api/business-units` | GET | List of valid Business Unit names for a dropdown |
+| `/api/extract` | POST, multipart | Upload `hiring_approval_file` / `cv_file` / `passport_file`; returns extracted field values to prefill |
+| `/api/preview` | POST, JSON | Validate + build the mandatory preview; returns `offer_token` |
+| `/api/approve` | POST, JSON | Finalize (DOCX + PDF + storage + audit) from an `offer_token` |
+| `/api/download/<filename>` | GET | Only used when storage is local (not SharePoint) |
+
+`/api/preview` request body:
+
+```json
+{
+  "business_unit": "PureHealth",
+  "requested_by": "hr.person@purehealth.ae",
+  "fields": {
+    "candidate_full_name": "Jane Doe",
+    "candidate_phone": "+971500000000",
+    "candidate_email": "jane@example.com",
+    "nationality": "British",
+    "job_title": "Engineer",
+    "line_manager": "Manager Name",
+    "department": "Engineering",
+    "notice_period": "30",
+    "total_salary": "20000"
+  },
+  "unavailable_fields": [],
+  "total_salary_unavailable": false
+}
+```
+
+returns `{"can_finalize": true, "missing_fields": [], "conflicts": [], "warnings": [], "offer_token": "..."}`.
+Pass that same `offer_token` straight through to `/api/approve` — never
+rebuild it on the Power Apps side.
+
+### 3. Build the Power Apps custom connector
+
+1. In [Power Apps](https://make.powerapps.com) (or Power Automate) →
+   **Custom connectors** → **New custom connector** → **Create from
+   blank**.
+2. **General**: Host = your Render hostname (e.g.
+   `offer-generator.onrender.com`), Scheme = HTTPS.
+3. **Security**: Authentication type = **API Key**, Parameter label =
+   `API Key`, Parameter name = `X-API-Key`, Parameter location =
+   `Header`.
+4. **Definition**: add one action per route above (New action → set
+   Verb/URL, e.g. `POST /api/preview`) → **Import from sample** lets you
+   paste a sample JSON request/response body to auto-generate the schema
+   instead of typing it field by field.
+5. Create the connector, then create a **connection** from it — this is
+   where you paste the actual `OFFER_AGENT_API_KEY` value. It's stored
+   encrypted by the connector's connection, never visible inside the
+   canvas app itself.
+
+### 4. Build the canvas app
+
+Three screens is enough:
+
+- **UploadScreen** — three `Attachment` (or `AddMediaButton`) controls for
+  hiring approval / CV / passport, plus a manual-entry form (`TextInput`
+  controls) mirroring `MANDATORY_FIELDS` in `webapp/offer_form.py`, for
+  fields the extractor didn't catch or got wrong. A button's `OnSelect`
+  calls `OfferAgentConnector.ApiExtract(...)` and uses the response to
+  `Reset()`/prefill those text inputs.
+- **PreviewScreen** — a button's `OnSelect` calls
+  `OfferAgentConnector.ApiPreview(...)`, stores the response in a
+  `Set(previewResult, ...)` variable, and shows `previewResult.warnings`
+  and `previewResult.missing_fields` in a read-only preview — mirroring
+  the mandatory human-review step the chat skill and web app both
+  enforce. The "Approve" button is disabled unless
+  `previewResult.can_finalize` is true.
+- **ResultScreen** — on Approve, call
+  `OfferAgentConnector.ApiApprove({offer_token: previewResult.offer_token})`,
+  then show `Launch(result.docx_url)` / `Launch(result.pdf_url)` buttons —
+  these open directly in the browser (SharePoint's own sign-in handles
+  access there; no API key needed for that step since it's just an
+  ordinary link the user's own SharePoint permissions already govern).
+
+I can't open your tenant's Power Apps Studio directly, so this is a build
+guide rather than something I can click through for you — tell me if you
+want the exact Power Fx formulas for each `OnSelect` spelled out once you
+have the connector created, since the generated action names depend on
+exactly how you defined the connector's operations.
+
 ## Minimal end-to-end example
 
 ```python
