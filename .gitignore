@@ -5,3 +5,6 @@ data/*.json
 data/*.jsonl
 data/storage/
 .venv/
+build/
+dist/
+*.spec
