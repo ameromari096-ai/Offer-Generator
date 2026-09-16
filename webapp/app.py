@@ -15,6 +15,7 @@ run.
 from __future__ import annotations
 
 import json
+import os
 import re
 import uuid
 from pathlib import Path
@@ -36,8 +37,19 @@ from webapp.document_parsing import DocumentParseError, extract_text, is_image
 from webapp.extraction_schema import ExtractionResult
 from webapp.regex_extraction import extract_offer_fields_regex
 
-BASE_DIR = Path(__file__).resolve().parent.parent
-DATA_DIR = BASE_DIR / "data"
+# When PyInstaller-frozen (the Windows desktop build), bundled read-only
+# resources (this package, the docx templates) live under sys._MEIPASS,
+# extracted fresh into a temp dir each run - never a place to write
+# generated contracts, the reference store, or the audit log. Those go to
+# a writable per-user directory instead. Unfrozen (normal dev / the web
+# deployment), behavior is unchanged: everything lives under the repo.
+if getattr(sys, "frozen", False):
+    BASE_DIR = Path(getattr(sys, "_MEIPASS", Path(sys.executable).resolve().parent))
+    DATA_DIR = Path(os.environ.get("APPDATA") or Path.home()) / "OfferAgent"
+else:
+    BASE_DIR = Path(__file__).resolve().parent.parent
+    DATA_DIR = BASE_DIR / "data"
+
 STORAGE_DIR = DATA_DIR / "storage"
 TEMPLATES_DIR = BASE_DIR / "templates"
 REFERENCE_STORE_PATH = DATA_DIR / "reference_store.json"

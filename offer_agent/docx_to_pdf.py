@@ -8,8 +8,10 @@ wording.
 
 from __future__ import annotations
 
+import os
 import shutil
 import subprocess
+import sys
 import tempfile
 from pathlib import Path
 
@@ -18,14 +20,32 @@ class PdfConversionError(RuntimeError):
     """Raised when LibreOffice fails to convert the DOCX to PDF."""
 
 
+# LibreOffice's Windows installer doesn't add soffice.exe to PATH, unlike
+# most Linux package managers — check the standard install locations
+# (both Program Files variants, either drive layout) before giving up.
+_WINDOWS_FALLBACK_PATHS = (
+    r"C:\Program Files\LibreOffice\program\soffice.exe",
+    r"C:\Program Files (x86)\LibreOffice\program\soffice.exe",
+)
+
+
 def _find_soffice() -> str:
     for candidate in ("soffice", "libreoffice"):
         path = shutil.which(candidate)
         if path:
             return path
+
+    if sys.platform == "win32":
+        for candidate in _WINDOWS_FALLBACK_PATHS:
+            if os.path.isfile(candidate):
+                return candidate
+
     raise PdfConversionError(
-        "No LibreOffice ('soffice'/'libreoffice') executable found on PATH; "
-        "cannot convert DOCX to PDF."
+        "No LibreOffice ('soffice'/'libreoffice') executable found on PATH"
+        + (" or in the standard Program Files install location" if sys.platform == "win32" else "")
+        + "; cannot convert DOCX to PDF. Install LibreOffice"
+        + (" (https://www.libreoffice.org/download/) and re-run" if sys.platform == "win32" else "")
+        + "."
     )
 
 
