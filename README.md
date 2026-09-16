@@ -224,6 +224,67 @@ spec, that's the correct behavior ("if no approved destination exists or
 access fails, stop and report the storage error") rather than falling
 back to local paths or personal storage.
 
+### SharePoint instead
+
+`offer_agent.sharepoint_storage.SharePointStorageBackend` saves into a
+folder in a SharePoint document library instead, via the Microsoft Graph
+API. It authenticates as an **Azure AD (Entra ID) app registration**
+using the OAuth2 client-credentials flow (app-only, no signed-in user,
+no interactive login) — the SharePoint equivalent of the Drive backend's
+service account. One-time setup:
+
+1. In [Azure Portal](https://portal.azure.com) → **Microsoft Entra ID** →
+   **App registrations** → **New registration**. Note the **Application
+   (client) ID** and **Directory (tenant) ID** on the app's Overview page.
+2. Under **Certificates & secrets**, create a **client secret** and copy
+   its value immediately (shown only once).
+3. Under **API permissions** → **Add a permission** → **Microsoft Graph**
+   → **Application permissions** → add **`Sites.Selected`** — not
+   `Sites.ReadWrite.All`. `Sites.Selected` grants nothing by default; the
+   next step scopes it to exactly one site, the same least-privilege
+   principle as sharing one Drive folder with a service account instead
+   of granting access to an entire Drive. A tenant admin then needs to
+   click **Grant admin consent**.
+4. Grant that app access to your specific site (this is the step that
+   actually authorizes anything — do it via
+   [Graph Explorer](https://developer.microsoft.com/graph/graph-explorer)
+   or `curl`, signed in as a site admin):
+   ```http
+   POST https://graph.microsoft.com/v1.0/sites/{site-id}/permissions
+   {
+     "roles": ["write"],
+     "grantedToIdentities": [{
+       "application": { "id": "<client-id>", "displayName": "Offer Agent" }
+     }]
+   }
+   ```
+   (Resolve `{site-id}` first with
+   `GET /sites/{hostname}:/{site-path}` — e.g.
+   `GET /sites/contoso.sharepoint.com:/sites/HR`.)
+5. Set environment variables where the agent runs:
+   - `SHAREPOINT_TENANT_ID`, `SHAREPOINT_CLIENT_ID`, `SHAREPOINT_CLIENT_SECRET`
+   - `SHAREPOINT_SITE_URL` — e.g. `https://contoso.sharepoint.com/sites/HR`
+   - `SHAREPOINT_FOLDER_PATH` — optional, e.g. `Offers` (defaults to the
+     document library's root)
+   - `SHAREPOINT_DRIVE_NAME` — optional, only needed if you're using a
+     document library other than the default "Documents"
+
+Then construct it with zero arguments, same shape as the Drive backend:
+
+```python
+from offer_agent.sharepoint_storage import SharePointStorageBackend
+
+storage = SharePointStorageBackend.from_env()
+```
+
+Same guarantees as the Drive backend: it never calls SharePoint's own
+sharing/permission APIs (relies entirely on whatever access the site
+already has), never overwrites an existing file, and uploads are capped
+at 4 MB per file by Graph's simple-upload endpoint — comfortably above a
+generated contract's actual size, but worth knowing if a future template
+grows much larger (would need the resumable upload-session API instead,
+which this backend does not implement).
+
 ## Minimal end-to-end example
 
 ```python
