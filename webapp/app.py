@@ -14,11 +14,12 @@ run.
 
 from __future__ import annotations
 
+import hmac
 import os
 import sys
 from pathlib import Path
 
-from flask import Flask, abort, render_template, request, send_from_directory
+from flask import Flask, Response, abort, render_template, request, send_from_directory
 
 sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
 
@@ -75,6 +76,38 @@ if os.environ.get("SHAREPOINT_TENANT_ID"):
 @app.context_processor
 def _inject_storage_label():
     return {"storage_label": app.config.get("STORAGE_LABEL", "local")}
+
+
+# The HTML pages below (/, /extract, /preview, /approve) have no login of
+# their own - fine for the desktop app (127.0.0.1 only) and for local dev,
+# but not for a deployment meant to sit behind the Power Apps API. Setting
+# both WEBAPP_BASIC_AUTH_USER and WEBAPP_BASIC_AUTH_PASSWORD turns on HTTP
+# Basic Auth for exactly those routes; /api/* keeps its own X-API-Key
+# check regardless, and /healthz always stays open for the host's health
+# checks. Left unset (the desktop app, local dev), behavior is unchanged.
+@app.before_request
+def _require_basic_auth_for_html_routes():
+    if request.path.startswith("/api/") or request.path == "/healthz":
+        return None
+
+    expected_user = os.environ.get("WEBAPP_BASIC_AUTH_USER")
+    expected_password = os.environ.get("WEBAPP_BASIC_AUTH_PASSWORD")
+    if not expected_user or not expected_password:
+        return None
+
+    auth = request.authorization
+    valid = (
+        auth is not None
+        and hmac.compare_digest(auth.username or "", expected_user)
+        and hmac.compare_digest(auth.password or "", expected_password)
+    )
+    if not valid:
+        return Response(
+            "Authentication required.",
+            401,
+            {"WWW-Authenticate": 'Basic realm="Offer Agent"'},
+        )
+    return None
 
 @app.route("/", methods=["GET"])
 def index():

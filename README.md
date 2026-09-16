@@ -358,12 +358,13 @@ set:
   site's own permissions, rather than to a file sitting on the Render
   host.
 
-If you'd rather not expose the plain HTML routes (`/`, `/extract`,
-`/preview`, `/approve`) alongside the API on the same public host, say so
-and I'll gate or remove them for this deployment — they're unauthenticated
-today, which was fine when the only alternative was "don't deploy it as a
-website at all," but doesn't need to stay that way now that the API is
-the actual front door.
+The HTML pages (`/`, `/extract`, `/preview`, `/approve`) have no login of
+their own — fine for the desktop app (127.0.0.1 only), not for a public
+host. Set both `WEBAPP_BASIC_AUTH_USER` and `WEBAPP_BASIC_AUTH_PASSWORD`
+to require HTTP Basic Auth on those pages specifically; `/api/*` keeps its
+own `X-API-Key` check regardless, and `/healthz` always stays open for
+Render's own health checks. Leave both unset (the default, and always the
+case for the desktop app) and nothing changes.
 
 ### 2. Routes
 
