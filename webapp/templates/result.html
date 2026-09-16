@@ -13,8 +13,19 @@
 
   {% if outcome.success %}
   <div class="section-title">Downloads</div>
+  {% if outcome.docx_secure_url.startswith("file://") %}
+  {# Local storage: the file lives in this server's own folder, so serve
+     it back through our own route rather than a browser-unopenable
+     file:// link. #}
   <a class="download-btn" href="{{ url_for('download', filename=outcome.docx_filename) }}">Download Word (.docx)</a>
   <a class="download-btn" href="{{ url_for('download', filename=outcome.pdf_filename) }}">Download PDF</a>
+  {% else %}
+  {# Remote storage (SharePoint, Drive, ...): the authoritative copy
+     lives there, not on this server — link straight to it instead of
+     pretending there's a local copy to serve back. #}
+  <a class="download-btn" href="{{ outcome.docx_secure_url }}" target="_blank" rel="noopener">Open Word (online)</a>
+  <a class="download-btn" href="{{ outcome.pdf_secure_url }}" target="_blank" rel="noopener">Open PDF (online)</a>
+  {% endif %}
   {% endif %}
 
   <div class="actions">

@@ -211,7 +211,10 @@
   <main>
     {% block content %}{% endblock %}
     <p class="footer-note">
-      Storage: local filesystem on this server (not yet wired to organizational storage).
+      Storage:
+      {%- if storage_label == "sharepoint" %} SharePoint (configured in this app's settings).
+      {%- else %} local filesystem on this computer (not wired to organizational storage).
+      {%- endif %}
       Every offer still requires this mandatory preview and explicit approval before any document is created.
     </p>
   </main>

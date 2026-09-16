@@ -154,6 +154,39 @@ Double-click `OfferAgent.exe` to launch. Generated contracts, the
 reference store, and the audit log are saved under
 `%APPDATA%\OfferAgent\` (a normal per-user folder, not inside the exe).
 
+### Switching it to SharePoint instead of local storage
+
+By default the desktop app saves to its own local folder above. To have
+it save into SharePoint instead, first complete the one-time Azure AD
+setup in "Wiring up real storage → SharePoint instead" below, then open
+(or create) **`%APPDATA%\OfferAgent\config.json`** — the app creates an
+empty template there on first launch — and fill in the `sharepoint`
+section:
+
+```json
+{
+  "sharepoint": {
+    "tenant_id": "<Directory (tenant) ID>",
+    "client_id": "<Application (client) ID>",
+    "client_secret": "<the client secret value>",
+    "site_url": "https://contoso.sharepoint.com/sites/HR",
+    "folder_path": "Offers",
+    "drive_name": ""
+  }
+}
+```
+
+Save the file and relaunch `OfferAgent.exe`. Leave `folder_path` empty
+for the document library's root, and `drive_name` empty unless you're
+using a library other than the default "Documents". Whichever backend
+is active shows in the app's own footer ("Storage: SharePoint..." vs.
+"Storage: local filesystem..."), and until the file is filled in
+completely (or if SharePoint access hasn't been granted yet — see the
+Azure AD steps below), the app simply keeps using local storage rather
+than failing to start; approving an offer while SharePoint is
+misconfigured or not yet authorized shows a clear error on that specific
+attempt instead of silently falling back mid-use.
+
 **Honesty note:** I verified the PyInstaller build succeeds in CI and
 separately verified the frozen-path logic (bundled templates vs. the
 writable `%APPDATA%` data directory) by simulating that environment —

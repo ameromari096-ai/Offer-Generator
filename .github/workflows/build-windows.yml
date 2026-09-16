@@ -33,6 +33,9 @@ jobs:
           pyinstaller --onefile --windowed --name OfferAgent `
             --add-data "templates;templates" `
             --add-data "webapp/templates;webapp/templates" `
+            --hidden-import requests `
+            --hidden-import offer_agent.sharepoint_storage `
+            --hidden-import desktop.config `
             desktop/app.py
 
       - name: Upload artifact

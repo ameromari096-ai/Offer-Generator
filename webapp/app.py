@@ -57,6 +57,24 @@ AUDIT_LOG_PATH = DATA_DIR / "audit.jsonl"
 
 app = Flask(__name__)
 
+
+def _default_storage_backend():
+    return LocalDevStorageBackend(STORAGE_DIR)
+
+
+# Which StorageBackend /approve actually uses is overridable (e.g. by the
+# desktop app, when it finds a valid SharePoint config) without touching
+# this route — set app.config["STORAGE_BACKEND_FACTORY"] to a zero-arg
+# callable returning a StorageBackend, and app.config["STORAGE_LABEL"] to
+# a short string the templates use to decide how to present downloads.
+app.config.setdefault("STORAGE_BACKEND_FACTORY", _default_storage_backend)
+app.config.setdefault("STORAGE_LABEL", "local")
+
+
+@app.context_processor
+def _inject_storage_label():
+    return {"storage_label": app.config.get("STORAGE_LABEL", "local")}
+
 MANDATORY_FIELDS = [
     ("candidate_full_name", "candidate full name", "Candidate full name"),
     ("candidate_phone", "candidate phone number", "Candidate phone number"),
@@ -320,7 +338,7 @@ def approve():
     resolved, requested_by = _deserialize_offer(offer_json)
 
     reference_store = ReferenceStore(REFERENCE_STORE_PATH)
-    storage = LocalDevStorageBackend(STORAGE_DIR)
+    storage = app.config["STORAGE_BACKEND_FACTORY"]()
 
     outcome = finalize_offer(
         resolved,
