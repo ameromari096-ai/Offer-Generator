@@ -1,0 +1,171 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>PureHealth Candidate Sourcing Agent</title>
+<link rel="icon" type="image/x-icon" href="assets/favicon.ico">
+<link rel="icon" type="image/png" sizes="32x32" href="assets/favicon-32.png">
+<link rel="icon" type="image/png" sizes="192x192" href="assets/favicon-192.png">
+<link rel="apple-touch-icon" href="assets/apple-touch-icon.png">
+<!-- Bump the ?v= query string on every edit to styles.css or js/*.js so
+     browsers/CDNs that cached the old file under the same URL fetch the
+     new one instead of serving stale JS after a deploy. -->
+<link rel="stylesheet" href="styles.css?v=7">
+</head>
+<body>
+<header class="app-header">
+  <div class="app-header__inner">
+    <div class="brand">
+      <img src="assets/purehealth-logo.png" alt="PureHealth" class="brand__logo">
+      <div class="brand__divider" aria-hidden="true"></div>
+      <div>
+        <h1>Candidate Sourcing Agent</h1>
+        <p class="tagline">Filter a search &middot; get a ready-to-run sourcing brief &middot; turn results into a shortlist .xlsx</p>
+      </div>
+    </div>
+    <nav class="tool-nav">
+      <a href="index.html">Interview Scheduling</a>
+      <a href="sourcing.html" class="active">Candidate Sourcing</a>
+    </nav>
+  </div>
+</header>
+
+<main class="app-main app-main--wide">
+  <div class="sourcing-layout">
+    <!-- FILTER SIDEBAR (LinkedIn-search-style) -->
+    <aside class="filter-sidebar card">
+      <h2>Search filters</h2>
+
+      <label>Job title
+        <input type="text" id="jobTitle" placeholder="e.g. ICU Nurse Manager">
+      </label>
+
+      <label>Seniority
+        <select id="seniority"></select>
+      </label>
+
+      <label>Industry
+        <input type="text" id="industry" placeholder="e.g. Private hospitals">
+      </label>
+
+      <label>Must-have skills / requirements <span class="hint-inline">(one per line)</span>
+        <textarea id="mustHaves" rows="3" placeholder="e.g. DHA license&#10;5+ years ICU experience"></textarea>
+      </label>
+
+      <h2>Geography</h2>
+      <div id="geoCheckboxes" class="checkbox-list"></div>
+      <label class="checkbox-inline"><input type="checkbox" id="geoGlobal"> Global (no restriction)</label>
+      <label>Other / custom location(s)
+        <input type="text" id="geoCustom" placeholder="e.g. Riyadh, Jeddah">
+      </label>
+      <label>Geographic exclusions <span class="optional">(optional)</span>
+        <input type="text" id="geoExclusions" placeholder="e.g. exclude Yemen">
+      </label>
+
+      <h2>Volume</h2>
+      <label>Number of profiles wanted
+        <input type="number" id="profileCount" min="1" step="1" value="15">
+      </label>
+
+      <h2>Sourcing direction</h2>
+      <div class="radio-row radio-row--stack">
+        <label><input type="radio" name="sourcingDirection" value="external" checked> External (exclude PureHealth network)</label>
+        <label><input type="radio" name="sourcingDirection" value="internal"> Internal (search only within PureHealth network)</label>
+      </div>
+      <label class="checkbox-inline"><input type="checkbox" id="hospitalBedPriority" checked> Prioritize hospitals by bed capacity, private over public</label>
+
+      <h2>PureHealth network entities</h2>
+      <p class="hint">External searches exclude these; internal searches use ONLY these. Remove or add as needed.</p>
+      <div id="orgChips" class="chip-list"></div>
+      <div class="row-inline">
+        <input type="text" id="orgAddInput" placeholder="Add an entity name">
+        <button type="button" id="orgAddBtn" class="btn-secondary">Add</button>
+      </div>
+    </aside>
+
+    <!-- MAIN CONTENT -->
+    <div class="sourcing-main">
+      <section class="card">
+        <h2>Briefing</h2>
+        <p class="hint">Paste a free-text briefing or job description below, and/or upload a JD file. The filters on
+          the left are the structured search parameters; this text gives the sourcing agent extra context.</p>
+        <label>Free-text briefing / job description <span class="optional">(optional if filters above are filled in)</span>
+          <textarea id="briefingText" rows="5" placeholder="Paste the briefing or JD text here..."></textarea>
+        </label>
+        <div id="jdDropZone" class="dropzone">
+          <input type="file" id="jdInput" class="dropzone__input" accept=".pdf,.docx,.txt">
+          <label for="jdInput" class="dropzone__label">
+            <span class="dropzone__text"><strong>Drag and drop</strong> a JD file here, or <span class="dropzone__browse">browse</span></span>
+            <span class="dropzone__hint">PDF, DOCX, or TXT &mdash; text is read locally and appended to the brief below</span>
+          </label>
+        </div>
+        <div id="jdStatus" class="status-line"></div>
+      </section>
+
+      <section class="card">
+        <h2>Step 1 &middot; Generate the sourcing brief</h2>
+        <p class="hint">This site has no server and no LinkedIn or AI API access, so it can't run a live LinkedIn
+          search itself (see the README). Instead it builds a complete, ready-to-run brief &mdash; with the full
+          sourcing ruleset and every filter above baked in &mdash; for you to hand to an AI assistant that can
+          actually browse the web (e.g. Claude or ChatGPT with web search/browsing enabled).</p>
+        <div class="actions actions--start">
+          <button type="button" id="generateBriefBtn" class="btn-primary">Generate sourcing brief</button>
+        </div>
+        <div id="briefOutput" class="hidden">
+          <div class="row-inline">
+            <button type="button" id="copyBriefBtn" class="btn-secondary">Copy to clipboard</button>
+            <button type="button" id="downloadBriefBtn" class="btn-secondary">Download brief (.txt)</button>
+            <span id="briefCopyStatus" class="status-line"></span>
+          </div>
+          <textarea id="briefText" class="mono-box mono-textarea" rows="16" readonly></textarea>
+        </div>
+      </section>
+
+      <section class="card">
+        <h2>Step 2 &middot; Import results &amp; generate the shortlist Excel</h2>
+        <p class="hint">Run the brief above in your AI assistant of choice, then paste the JSON array it returns
+          (matching the schema in the brief) here. Every candidate is checked against the shortlist's formatting
+          rules &mdash; exactly 3 bullets per bullet column, a real-looking LinkedIn URL, a 0-100 match score &mdash;
+          before the Excel file is built. Nothing here is invented; this only formats what you paste in.</p>
+        <label>Pasted candidate JSON
+          <textarea id="resultsInput" rows="8" placeholder="[ { &quot;candidateName&quot;: ... }, ... ]"></textarea>
+        </label>
+        <label>Search-tier notes <span class="optional">(optional &mdash; paste the agent's tier/query-count notes)</span>
+          <textarea id="tierNotes" rows="2" placeholder="e.g. Reached target at Tier 2 after 9 queries."></textarea>
+        </label>
+        <div class="actions actions--start">
+          <button type="button" id="validateBtn" class="btn-primary">Validate &amp; preview</button>
+        </div>
+        <div id="validationErrors" class="error-box hidden"></div>
+        <div id="validationWarnings" class="conflict-box hidden"></div>
+        <div id="resultsPreviewWrap" class="hidden">
+          <h3>Preview (<span id="resultsCount"></span> candidates)</h3>
+          <div class="table-scroll">
+            <table class="results-table" id="resultsTable"></table>
+          </div>
+          <div class="actions actions--start">
+            <button type="button" id="downloadExcelBtn" class="btn-primary">Download shortlist (.xlsx)</button>
+          </div>
+          <div id="excelSummary" class="recruiter-note hidden"></div>
+        </div>
+      </section>
+    </div>
+  </div>
+</main>
+
+<footer class="app-footer">
+  <p>This tool never contacts LinkedIn or any AI service itself, and never invents a candidate or a profile URL.
+    It only prepares the search brief and formats real results you bring back.</p>
+</footer>
+
+<script src="vendor/pdf.min.js" defer></script>
+<script src="vendor/mammoth.browser.min.js" defer></script>
+<script src="vendor/xlsx.min.js" defer></script>
+<script src="js/extract.js?v=7"></script>
+<script src="js/templates.js?v=7"></script>
+<script src="js/sourcingPrompt.js?v=7"></script>
+<script src="js/sourcingExcel.js?v=7"></script>
+<script src="js/sourcing.js?v=7" defer></script>
+</body>
+</html>

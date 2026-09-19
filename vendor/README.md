@@ -8,8 +8,10 @@ CDNs (a real failure mode we hit in practice — see the main README).
 |---|---|---|---|
 | `pdf.min.js`, `pdf.worker.min.js` | [pdfjs-dist](https://www.npmjs.com/package/pdfjs-dist) (legacy build) | 3.11.174 | Apache-2.0 (`LICENSE.pdfjs-dist.txt`) |
 | `mammoth.browser.min.js` | [mammoth](https://www.npmjs.com/package/mammoth) | 1.6.0 | BSD-2-Clause (`LICENSE.mammoth.txt`) |
+| `xlsx.min.js` | [xlsx](https://www.npmjs.com/package/xlsx) (`dist/xlsx.mini.min.js`) | 0.18.5 | Apache-2.0 (`LICENSE.xlsx.txt`) |
 
 To upgrade, download the matching build from the package's npm tarball
 (`legacy/build/pdf.min.js` + `legacy/build/pdf.worker.min.js` for pdfjs-dist,
-`mammoth.browser.min.js` for mammoth) and replace the files here — no other
-code changes should be needed unless the library's public API changed.
+`mammoth.browser.min.js` for mammoth, `dist/xlsx.mini.min.js` for xlsx) and
+replace the files here — no other code changes should be needed unless the
+library's public API changed.

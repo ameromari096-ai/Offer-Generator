@@ -233,7 +233,51 @@
     };
   }
 
-  const api = { extractCandidateDetails, extractFromText, reconstructLines };
+  /**
+   * Best-effort raw text extraction from a PDF/DOCX/TXT file, for callers
+   * that just want the document's text (e.g. a pasted job description)
+   * rather than name/email/phone fields. Reads the whole document, not
+   * just the first pages used for CV header detection.
+   * Returns { text, warning? }.
+   */
+  async function extractRawText(file) {
+    const ext = (file.name.split('.').pop() || '').toLowerCase();
+    try {
+      if (ext === 'pdf') {
+        if (!global.pdfjsLib) {
+          return { text: '', warning: 'The PDF reader library failed to load — try reloading the page, or paste the text instead.' };
+        }
+        const buf = await file.arrayBuffer();
+        const pdf = await global.pdfjsLib.getDocument({ data: buf }).promise;
+        let text = '';
+        for (let i = 1; i <= pdf.numPages; i++) {
+          const page = await pdf.getPage(i);
+          const content = await page.getTextContent();
+          text += reconstructLines(content.items) + '\n';
+        }
+        if (!text.trim()) {
+          return { text: '', warning: `No selectable text was found in "${file.name}" — it may be a scanned/image-based PDF. Please paste the text instead.` };
+        }
+        return { text };
+      }
+      if (ext === 'docx') {
+        if (!global.mammoth) {
+          return { text: '', warning: 'The DOCX reader library failed to load — try reloading the page, or paste the text instead.' };
+        }
+        const buf = await file.arrayBuffer();
+        const result = await global.mammoth.extractRawText({ arrayBuffer: buf });
+        return { text: result.value || '' };
+      }
+      if (ext === 'txt') {
+        return { text: await readAsText(file) };
+      }
+      return { text: '', warning: `"${file.name}" is not a supported file type (use PDF, DOCX, or TXT).` };
+    } catch (err) {
+      return { text: '', warning: `"${file.name}" could not be parsed — it may be corrupted or password-protected. Please paste the text instead.` };
+    }
+  }
+
+  const api = { extractCandidateDetails, extractFromText, reconstructLines, extractRawText };
   const root = global.PH || (global.PH = {});
   root.extract = api;
   if (typeof module !== 'undefined' && module.exports) {

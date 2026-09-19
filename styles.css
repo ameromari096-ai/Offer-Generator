@@ -307,3 +307,117 @@ input:focus { outline: 2px solid var(--brand); outline-offset: 1px; }
   color: var(--muted);
   padding: 20px 16px 40px;
 }
+
+.tool-nav { display: flex; gap: 6px; }
+.app-header__inner--nav { padding-top: 10px; }
+.tool-nav a {
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--muted);
+  text-decoration: none;
+  padding: 8px 14px;
+  border-radius: 999px;
+  border: 1px solid transparent;
+}
+.tool-nav a:hover { background: var(--brand-light); color: var(--brand-dark); }
+.tool-nav a.active { background: var(--brand); color: #fff; }
+
+/* ---------- Candidate Sourcing Agent ---------- */
+.app-main--wide { max-width: 1180px; }
+
+textarea {
+  display: block;
+  width: 100%;
+  margin-top: 5px;
+  padding: 9px 10px;
+  font-size: 14px;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  font-family: inherit;
+  background: #fff;
+  resize: vertical;
+}
+textarea:focus { outline: 2px solid var(--brand); outline-offset: 1px; }
+
+select {
+  display: block;
+  width: 100%;
+  margin-top: 5px;
+  padding: 9px 10px;
+  font-size: 14px;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  font-family: inherit;
+  background: #fff;
+}
+
+.mono-textarea { width: 100%; white-space: pre; }
+
+.sourcing-layout {
+  display: grid;
+  grid-template-columns: 300px 1fr;
+  gap: 20px;
+  align-items: start;
+}
+@media (max-width: 860px) {
+  .sourcing-layout { grid-template-columns: 1fr; }
+}
+
+.filter-sidebar {
+  position: sticky;
+  top: 16px;
+  max-height: calc(100vh - 32px);
+  overflow-y: auto;
+}
+.filter-sidebar h2:first-child { margin-top: 0; }
+
+.checkbox-list { display: flex; flex-direction: column; gap: 6px; margin-bottom: 10px; }
+.checkbox-inline {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-weight: 500;
+  font-size: 13.5px;
+  margin-bottom: 10px;
+}
+.checkbox-inline input { width: auto; margin: 0; }
+
+.radio-row--stack { flex-direction: column; gap: 10px; }
+.radio-row--stack label { font-weight: 500; }
+
+.chip-list { display: flex; flex-wrap: wrap; gap: 6px; margin-bottom: 10px; }
+.chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  background: var(--brand-light);
+  color: var(--brand-dark);
+  border: 1px solid var(--brand);
+  border-radius: 999px;
+  padding: 4px 6px 4px 12px;
+  font-size: 12.5px;
+  font-weight: 600;
+}
+.chip button {
+  background: none;
+  border: none;
+  color: var(--brand-dark);
+  cursor: pointer;
+  font-size: 15px;
+  line-height: 1;
+  padding: 2px 6px;
+}
+.chip button:hover { color: var(--error-text); }
+
+.actions--start { justify-content: flex-start; margin-top: 16px; }
+
+.table-scroll { overflow-x: auto; margin: 12px 0; }
+.results-table { border-collapse: collapse; width: 100%; font-size: 12.5px; }
+.results-table th, .results-table td {
+  border: 1px solid var(--border);
+  padding: 8px 10px;
+  text-align: left;
+  vertical-align: top;
+  min-width: 140px;
+}
+.results-table th { background: var(--brand-light); color: var(--brand-dark); }
