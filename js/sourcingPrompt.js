@@ -13,9 +13,11 @@
   ];
 
   const GEOGRAPHY_OPTIONS = [
-    'United Arab Emirates', 'Saudi Arabia', 'Qatar', 'Kuwait', 'Bahrain', 'Oman', 'Egypt'
+    'United Arab Emirates', 'United Kingdom', 'United States', 'Canada', 'Europe'
   ];
-  const DEFAULT_GEOGRAPHY = ['United Arab Emirates'];
+  // None checked by default — the requester picks explicitly, or adds a
+  // custom location, or leaves it unspecified.
+  const DEFAULT_GEOGRAPHY = [];
 
   function bulletsOrNote(list) {
     const items = (list || []).filter(Boolean);
@@ -37,7 +39,7 @@
    * state: {
    *   jobTitle: string[], yearsExperience, industry: string[], companySize: string[],
    *   targetCompanies: string[], keywords: string[], briefingText, jdText,
-   *   geography: { countries: string[], global: boolean, customLocations: string[], exclusions: string, usedDefault: boolean },
+   *   geography: { countries: string[], global: boolean, customLocations: string[], exclusions: string },
    *   profileCount, sourcingDirection: 'external'|'internal', excludedOrgs: string[],
    *   hospitalBedPriority: boolean
    * }
@@ -47,10 +49,9 @@
     if (state.geography.global) geoParts.push('Global (no geographic restriction)');
     geoParts.push(...state.geography.countries);
     geoParts.push(...(state.geography.customLocations || []));
-    const geoLine = geoParts.length ? geoParts.join(', ') : 'United Arab Emirates';
-    const geoNote = state.geography.usedDefault
-      ? ' (not specified by the requester — defaulted to PureHealth\'s primary market; adjust if a different market applies)'
-      : '';
+    const geoLine = geoParts.length
+      ? geoParts.join(', ')
+      : '(not specified by the requester — infer from the briefing/JD, or ask if genuinely unclear)';
 
     const orgList = state.sourcingDirection === 'internal'
       ? `INTERNAL SOURCING REQUESTED — search ONLY within these entities (do not exclude them):\n${bulletsOrNote(state.excludedOrgs)}`
@@ -76,7 +77,7 @@ ${state.briefingText ? state.briefingText.trim() : '(none provided)'}
 
 ${state.jdText ? `Attached/pasted job description:\n${state.jdText.trim()}\n` : ''}
 === SEARCH PARAMETERS ===
-Target geography: ${geoLine}${geoNote}
+Target geography: ${geoLine}
 ${state.geography.exclusions ? `Geographic exclusions: ${state.geography.exclusions}\n` : ''}Number of profiles required: ${targetCount} — this is a REQUIREMENT, not a target to approximate. Do not stop short of it unless you have exhausted the escalation ladder below.
 Sourcing direction: ${state.sourcingDirection === 'internal' ? 'INTERNAL (search only within the listed entities)' : 'EXTERNAL (exclude the listed entities)'}
 ${orgList}

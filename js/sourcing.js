@@ -119,11 +119,6 @@
     const checkedCountries = Array.from(geoBox.querySelectorAll('input:checked')).map((cb) => cb.value);
     const global = el('geoGlobal').checked;
     const customLocations = geoCustomField.getValues();
-    const usedDefault =
-      !global &&
-      customLocations.length === 0 &&
-      checkedCountries.length === sourcingPrompt.DEFAULT_GEOGRAPHY.length &&
-      checkedCountries.every((c) => sourcingPrompt.DEFAULT_GEOGRAPHY.includes(c));
 
     return {
       jobTitle: jobTitleField.getValues(),
@@ -138,8 +133,7 @@
         countries: checkedCountries,
         global,
         customLocations,
-        exclusions: el('geoExclusions').value.trim(),
-        usedDefault
+        exclusions: el('geoExclusions').value.trim()
       },
       profileCount: Number(el('profileCount').value) || 15,
       sourcingDirection: document.querySelector('input[name="sourcingDirection"]:checked').value,
