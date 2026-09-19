@@ -11,7 +11,7 @@
 <!-- Bump the ?v= query string on every edit to styles.css or js/*.js so
      browsers/CDNs that cached the old file under the same URL fetch the
      new one instead of serving stale JS after a deploy. -->
-<link rel="stylesheet" href="styles.css?v=7">
+<link rel="stylesheet" href="styles.css?v=8">
 </head>
 <body>
 <header class="app-header">
@@ -109,8 +109,9 @@
           search itself (see the README). Instead it builds a complete, ready-to-run brief &mdash; with the full
           sourcing ruleset and every filter above baked in &mdash; for you to hand to an AI assistant that can
           actually browse the web, such as <strong>Microsoft Copilot Chat</strong> (with web search turned on),
-          Claude, or ChatGPT. No integration, license, or backend is required for this step &mdash; paste the
-          brief in as a chat message and copy the JSON it returns back into Step 2 below.</p>
+          Claude, or ChatGPT. Easiest option: paste it straight into the embedded PureHealth Sourcing Agent chat
+          below &mdash; it will generate the shortlist Excel for you automatically. With any other assistant,
+          copy the JSON it returns back into Step 2 below instead.</p>
         <div class="actions actions--start">
           <button type="button" id="generateBriefBtn" class="btn-primary">Generate sourcing brief</button>
         </div>
@@ -125,11 +126,28 @@
       </section>
 
       <section class="card">
+        <h2>Chat with the PureHealth Sourcing Agent</h2>
+        <p class="hint">This is the live PureHealth Copilot Studio agent, embedded directly on this page &mdash;
+          paste the brief above into it and it will search, verify, and generate the shortlist Excel itself
+          (via its own tool), handing you back a link right in the chat. Skips Step 2 entirely when used this way.
+          Sign in with your PureHealth Microsoft account if prompted.</p>
+        <div class="copilot-embed">
+          <iframe
+            src="https://copilotstudio.microsoft.com/environments/Default-66095314-82d7-48e8-be7c-967c923aa1dd/bots/cr30a_candidatesourcingagent_-p674u/webchat?__version__=2&amp;enableFileAttachment=false&amp;cliAgent=true"
+            title="PureHealth Candidate Sourcing Agent chat"
+            frameborder="0"
+            loading="lazy"></iframe>
+        </div>
+      </section>
+
+      <section class="card">
         <h2>Step 2 &middot; Import results &amp; generate the shortlist Excel</h2>
-        <p class="hint">Run the brief above in your AI assistant of choice, then paste the JSON array it returns
-          (matching the schema in the brief) here. Every candidate is checked against the shortlist's formatting
-          rules &mdash; exactly 3 bullets per bullet column, a real-looking LinkedIn URL, a 0-100 match score &mdash;
-          before the Excel file is built. Nothing here is invented; this only formats what you paste in.</p>
+        <p class="hint">Only needed if you ran the brief in a plain AI assistant (Claude, ChatGPT, or the embedded
+          agent above without it calling its tool) rather than letting the embedded agent above generate the file
+          itself. Paste the JSON array it returns (matching the schema in the brief) here. Every candidate is
+          checked against the shortlist's formatting rules &mdash; exactly 3 bullets per bullet column, a
+          real-looking LinkedIn URL, a 0-100 match score &mdash; before the Excel file is built. Nothing here is
+          invented; this only formats what you paste in.</p>
         <label>Pasted candidate JSON
           <textarea id="resultsInput" rows="8" placeholder="[ { &quot;candidateName&quot;: ... }, ... ]"></textarea>
         </label>
@@ -164,10 +182,10 @@
 <script src="vendor/pdf.min.js" defer></script>
 <script src="vendor/mammoth.browser.min.js" defer></script>
 <script src="vendor/xlsx.min.js" defer></script>
-<script src="js/extract.js?v=7"></script>
-<script src="js/templates.js?v=7"></script>
-<script src="js/sourcingPrompt.js?v=7"></script>
-<script src="js/sourcingExcel.js?v=7"></script>
-<script src="js/sourcing.js?v=7" defer></script>
+<script src="js/extract.js?v=8"></script>
+<script src="js/templates.js?v=8"></script>
+<script src="js/sourcingPrompt.js?v=8"></script>
+<script src="js/sourcingExcel.js?v=8"></script>
+<script src="js/sourcing.js?v=8" defer></script>
 </body>
 </html>
