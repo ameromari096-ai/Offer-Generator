@@ -86,10 +86,12 @@
     const result = await extract.extractCandidateDetails(file);
     state.cvExtraction = result;
 
-    if (result.name && !el('candidateName').value.trim()) {
+    // Uploading a CV is a deliberate "use this candidate" action, so it
+    // overwrites whatever is currently in the name/email fields.
+    if (result.name) {
       el('candidateName').value = result.name;
     }
-    if (result.email && !el('candidateEmail').value.trim()) {
+    if (result.email) {
       el('candidateEmail').value = result.email;
     }
 

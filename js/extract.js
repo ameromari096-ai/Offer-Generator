@@ -6,14 +6,26 @@
 (function (global) {
   const EMAIL_RE = /[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}/;
 
+  const NON_NAME_WORDS =
+    /curriculum vitae|resume|cv\b|address|phone|mobile|email|profile|summary|objective|experience|education|skills|qualifications|certifications|projects|languages|references|contact|linkedin|github|portfolio|declaration|nationality|marital|gender|birth|street|city|country/i;
+
   function looksLikeName(line) {
     const trimmed = line.trim();
     if (!trimmed || trimmed.length > 60) return false;
     if (/[0-9@]/.test(trimmed)) return false;
-    if (/curriculum vitae|resume|cv\b|address|phone|email|profile|summary/i.test(trimmed)) return false;
+    if (NON_NAME_WORDS.test(trimmed)) return false;
     const words = trimmed.split(/\s+/);
-    if (words.length < 2 || words.length > 4) return false;
+    if (words.length < 1 || words.length > 5) return false;
     return words.every((w) => /^[A-Z][a-zA-Z'.-]*$/.test(w));
+  }
+
+  // Explicit "Name: John Smith" / "Full Name: John Smith" style labels, when present.
+  function findLabeledName(lines) {
+    for (const line of lines) {
+      const m = /^(?:full\s*name|candidate\s*name|name)\s*[:\-]\s*(.+)$/i.exec(line.trim());
+      if (m && looksLikeName(m[1])) return m[1].trim();
+    }
+    return null;
   }
 
   function guessNameFromFilename(filename) {
@@ -41,13 +53,15 @@
       .filter(Boolean)
       .slice(0, 15);
 
-    let name = null;
-    let nameConfidence = 'low';
-    for (const line of lines) {
-      if (looksLikeName(line)) {
-        name = line;
-        nameConfidence = 'high';
-        break;
+    let name = findLabeledName(lines);
+    let nameConfidence = name ? 'high' : 'low';
+    if (!name) {
+      for (const line of lines) {
+        if (looksLikeName(line)) {
+          name = line;
+          nameConfidence = 'high';
+          break;
+        }
       }
     }
     if (!name) {
@@ -70,6 +84,38 @@
     return await file.text();
   }
 
+  // pdf.js reports one item per glyph run, not per visual line — a name is
+  // frequently split into separate items (different weight/kerning from the
+  // surrounding text), so naively joining items with '\n' shreds it across
+  // multiple "lines" and breaks name detection. Reassemble visual lines by
+  // grouping items that share a baseline (their transform's y coordinate).
+  function reconstructLines(items) {
+    const lines = [];
+    let currentLine = '';
+    let currentY = null;
+    const Y_TOLERANCE = 2;
+    for (const item of items) {
+      const str = item.str || '';
+      const y = Array.isArray(item.transform) ? item.transform[5] : null;
+      const sameLine = currentY !== null && y !== null && Math.abs(y - currentY) <= Y_TOLERANCE;
+      if (!sameLine) {
+        if (currentLine.trim()) lines.push(currentLine.trim());
+        currentLine = str;
+        currentY = y;
+      } else {
+        const needsSpace = currentLine && !/\s$/.test(currentLine) && !/^\s/.test(str);
+        currentLine += (needsSpace ? ' ' : '') + str;
+      }
+      if (item.hasEOL) {
+        if (currentLine.trim()) lines.push(currentLine.trim());
+        currentLine = '';
+        currentY = null;
+      }
+    }
+    if (currentLine.trim()) lines.push(currentLine.trim());
+    return lines.join('\n');
+  }
+
   async function readAsPdfText(file) {
     if (!global.pdfjsLib) return '';
     const buf = await file.arrayBuffer();
@@ -79,7 +125,7 @@
     for (let i = 1; i <= pageCount; i++) {
       const page = await pdf.getPage(i);
       const content = await page.getTextContent();
-      text += content.items.map((it) => it.str).join('\n') + '\n';
+      text += reconstructLines(content.items) + '\n';
     }
     return text;
   }
@@ -146,7 +192,7 @@
     };
   }
 
-  const api = { extractCandidateDetails, extractFromText };
+  const api = { extractCandidateDetails, extractFromText, reconstructLines };
   const root = global.PH || (global.PH = {});
   root.extract = api;
   if (typeof module !== 'undefined' && module.exports) {
