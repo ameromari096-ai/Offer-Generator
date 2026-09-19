@@ -3,10 +3,10 @@
 // Reuses js/sourcingExcel.js unchanged (it already supports being `require`d
 // as a CommonJS module) so the validation rules and the .xlsx layout are
 // identical to the ones sourcing.html uses in the browser.
-const path = require('path');
-
+// A literal relative path (not path.join(__dirname, ...)) so Netlify's
+// function bundler can statically detect and package this dependency.
 global.XLSX = require('xlsx');
-const sourcingExcel = require(path.join(__dirname, '..', '..', 'js', 'sourcingExcel.js'));
+const sourcingExcel = require('../../js/sourcingExcel.js');
 
 // Set SHORTLIST_API_KEY in the Netlify dashboard (Site configuration ->
 // Environment variables) once deployed, and send it back as the x-api-key
