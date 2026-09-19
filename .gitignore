@@ -1,0 +1,6 @@
+# Azure Functions local dev / deployment artifacts (see docs/copilot-studio-integration.md)
+node_modules/
+local.settings.json
+.azure/
+bin/
+obj/

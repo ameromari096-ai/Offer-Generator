@@ -1,0 +1,11 @@
+.git*
+.vscode
+local.settings.json
+test
+*.md
+docs
+index.html
+sourcing.html
+styles.css
+assets
+vendor

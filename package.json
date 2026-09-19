@@ -1,0 +1,10 @@
+{
+  "name": "purehealth-offer-generator-functions",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Azure Functions backend for the Candidate Sourcing Agent's Copilot Studio integration (see docs/copilot-studio-integration.md). The rest of this repo is a static site with no build step; this file only exists for the Azure Functions app.",
+  "main": "GenerateShortlist/index.js",
+  "dependencies": {
+    "xlsx": "0.18.5"
+  }
+}
