@@ -410,3 +410,10 @@ select {
 .chip button:hover { color: var(--error-text); }
 
 .actions--start { justify-content: flex-start; margin-top: 16px; }
+
+.intro-note {
+  background: var(--brand-light);
+  border: 1px solid var(--brand);
+}
+.intro-note h2 { border-bottom-color: var(--brand); }
+.intro-note .hint { color: var(--brand-dark); font-size: 13.5px; }

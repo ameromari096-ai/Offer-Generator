@@ -11,7 +11,7 @@
 <!-- Bump the ?v= query string on every edit to styles.css or js/*.js so
      browsers/CDNs that cached the old file under the same URL fetch the
      new one instead of serving stale JS after a deploy. -->
-<link rel="stylesheet" href="styles.css?v=13">
+<link rel="stylesheet" href="styles.css?v=14">
 </head>
 <body>
 <header class="app-header">
@@ -33,10 +33,23 @@
 </header>
 
 <main class="app-main app-main--wide">
+  <section class="card intro-note">
+    <h2>How this works</h2>
+    <p class="hint">
+      <strong>Step 1 &mdash; Describe the role:</strong> use the search filters below, write a free-text
+      briefing, upload a job description, or any combination of the three &mdash; nothing here is required
+      on its own, as long as you give it something to work with.<br>
+      <strong>Step 2 &mdash; Generate the sourcing brief:</strong> turns everything from Step 1 into one
+      complete, ready-to-run brief.<br>
+      <strong>Step 3 &mdash; Open the Sourcing Agent:</strong> copy that brief into the PureHealth Sourcing
+      Agent chat, which searches, verifies, and hands you back the shortlist as a downloadable Excel file.
+    </p>
+  </section>
+
   <div class="sourcing-layout">
     <!-- FILTER SIDEBAR (LinkedIn-search-style) -->
     <aside class="filter-sidebar card">
-      <h2>Search filters</h2>
+      <h2>Step 1 &middot; Search filters <span class="hint-inline">(optional)</span></h2>
 
       <label>Job title <span class="hint-inline">(press Enter to add each)</span></label>
       <div id="jobTitleChips" class="chip-list"></div>
@@ -114,9 +127,11 @@
     <!-- MAIN CONTENT -->
     <div class="sourcing-main">
       <section class="card">
-        <h2>Briefing</h2>
+        <h2>Step 1 &middot; Briefing &amp; job description <span class="hint-inline">(optional)</span></h2>
         <p class="hint">Paste a free-text briefing or job description below, and/or upload a JD file. The filters on
-          the left are the structured search parameters; this text gives the sourcing agent extra context.</p>
+          the left are the structured search parameters; this text gives the sourcing agent extra context. Use
+          either one on its own, both together, or just the filters &mdash; whatever you fill in here and on the
+          left is combined into one brief in Step 2.</p>
         <label>Free-text briefing / job description <span class="optional">(optional if filters above are filled in)</span>
           <textarea id="briefingText" rows="5" placeholder="Paste the briefing or JD text here..."></textarea>
         </label>
@@ -131,7 +146,7 @@
       </section>
 
       <section class="card">
-        <h2>Step 1 &middot; Generate the sourcing brief</h2>
+        <h2>Step 2 &middot; Generate the sourcing brief</h2>
         <p class="hint">This site has no server and no LinkedIn or AI API access, so it can't run a live LinkedIn
           search itself (see the README). Instead it builds a complete, ready-to-run brief &mdash; with the full
           sourcing ruleset and every filter above baked in &mdash; ready to copy and paste into the PureHealth
@@ -150,7 +165,7 @@
       </section>
 
       <section class="card">
-        <h2>Step 2 &middot; Open the Sourcing Agent</h2>
+        <h2>Step 3 &middot; Open the Sourcing Agent</h2>
         <p class="hint">Copy the brief above, then open the live PureHealth Sourcing Agent (Microsoft 365 Copilot)
           and paste it in. Microsoft blocks its sign-in page from loading inside an embedded frame, so it opens
           in its own tab &mdash; the agent will search, verify, and generate the shortlist Excel itself, handing
