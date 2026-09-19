@@ -19,13 +19,19 @@ you download and finish in Outlook yourself:
 - **`<request-id>-email-draft.eml`** — the candidate-facing interview email.
   Opening this file (e.g. double-clicking it, or "Open" from your downloads)
   creates a fully editable, **unsent** email draft in Outlook, complete with
-  the candidate email as recipient, the formatted HTML body, and attachments.
-  Add interviewer addresses to Cc/To if needed and send it yourself.
-  (A meeting-invite/calendar version of this file was tried and reverted —
-  it caused Outlook to send the invite immediately instead of opening an
-  editable draft, which breaks this tool's core "nothing is ever sent
-  automatically" guarantee. See git history around that commit if revisiting
-  this.)
+  the candidate email as recipient, the formatted HTML body, and attachments
+  — including a `<request-id>-interview.ics` calendar file. Add interviewer
+  addresses to Cc/To if needed and send it yourself.
+  - The `.ics` is a **plain attachment**, not a live meeting invite: nothing
+    happens until you (or the candidate) deliberately double-click it to add
+    the event to your own calendar. An earlier version embedded it as a
+    `text/calendar; method=REQUEST` MIME part with a
+    `Content-Class: urn:content-classes:calendarmessage` header instead —
+    that made Outlook send the email immediately on open rather than
+    drafting it, breaking this tool's core "nothing is ever sent
+    automatically" guarantee, so it was reverted in favor of the plain
+    attachment. Don't reintroduce that MIME structure without verifying
+    against the exact client that triggered the auto-send.
 - **`<request-id>-candidate-access-draft.eml`** — a short internal email
   ("Subject: Candidate Access") asking your access/facilities team to grant
   the candidate access, listing their name, email, mobile number, and the
@@ -84,6 +90,7 @@ js/dateUtils.js                         UAE (Gulf Standard Time) date calculatio
 js/timeUtils.js                         Start/end time calculation, 12h formatting
 js/extract.js                           Client-side CV name/email extraction + raw text extraction (JD upload)
 js/templates.js                         Email HTML template + shared escapeHtml helper
+js/ics.js                               Plain .ics calendar file builder (attached to the email draft)
 js/eml.js                               .eml (email draft) file builder
 js/main.js                              Interview Scheduling wizard state machine / UI wiring
 js/sourcingPrompt.js                    Builds the sourcing brief text from the filter panel's state

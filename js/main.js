@@ -1,5 +1,5 @@
 (function () {
-  const { dateUtils, timeUtils, extract, templates, eml } = window.PH;
+  const { dateUtils, timeUtils, extract, templates, eml, ics } = window.PH;
 
   if (window.pdfjsLib) {
     // Same-origin, vendored copy — avoids cross-origin worker restrictions
@@ -456,6 +456,25 @@
           arrayBuffer: state.cvArrayBuffer
         });
       }
+      // A plain .ics attachment (not a live meeting-request MIME part —
+      // that broke the "never sends automatically" guarantee, see git
+      // history) so whoever opens the draft can add it to their own
+      // calendar with a deliberate double-click, blocking that time.
+      const location = form.interviewType === 'In Person' ? templates.OFFICE_ADDRESS : form.teamsUrl;
+      const icsContent = ics.buildEvent({
+        uid: `${requestId}@purehealth-tools`,
+        dayKey: state.resolvedDayKey,
+        startMinutes: state.startMinutes,
+        endMinutes: state.endMinutes,
+        summary: state.subject,
+        location,
+        description: `Interview for ${form.jobTitle} with ${form.candidateName}. ${state.resolvedDateLabel}, ${state.timeLabel}. Location: ${location}`
+      });
+      attachments.push({
+        filename: `${requestId}-interview.ics`,
+        mimeType: 'text/calendar',
+        arrayBuffer: new TextEncoder().encode(icsContent).buffer
+      });
       const emlContent = eml.buildEml({
         to: form.candidateEmail,
         subject: state.subject,
@@ -469,7 +488,7 @@
       emlLink.download = `${requestId}-email-draft.eml`;
       emlLink.classList.remove('hidden');
       emailCreated = true;
-      messages.push(`Unsent Outlook email draft created with ${attachments.length} attachment(s) (Create Outlook Interview Email Draft).`);
+      messages.push(`Unsent Outlook email draft created with ${attachments.length} attachment(s), including a .ics calendar file you can double-click to add to your own calendar (Create Outlook Interview Email Draft).`);
     }
 
     // Internal "Candidate Access" email: name, email, phone, and the same
