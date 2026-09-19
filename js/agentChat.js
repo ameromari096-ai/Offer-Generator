@@ -9,7 +9,6 @@
   const escapeHtml = (window.PH && window.PH.templates && window.PH.templates.escapeHtml) || ((s) => String(s || ''));
 
   const TOKEN_ENDPOINT = 'https://harmonious-kataifi-f271a2.netlify.app/.netlify/functions/directlineToken';
-  const DL_BASE = 'https://directline.botframework.com/v3/directline';
   const MAX_AUTO_CONTINUES = 20;
   const POLL_INTERVAL_MS = 1200;
   // Matches the phrasing the agent's own instructions use when it pauses
@@ -18,9 +17,16 @@
   // sentence that merely mentions the word "continue" in passing.
   const CONTINUE_PATTERN = /\b(reply|type|say|send)\b[^.?!\n]{0,25}\bcontinue\b|\bcontinue\?\s*$|\bwould you like\b[^.?!\n]{0,50}\bcontinue\b/i;
 
+  function directLineBase(region) {
+    return region
+      ? `https://${region}.directline.botframework.com/v3/directline`
+      : 'https://directline.botframework.com/v3/directline';
+  }
+
   const state = {
     conversationId: null,
     token: null,
+    dlBase: directLineBase(''),
     watermark: null,
     userId: 'sourcing-web-' + Math.random().toString(36).slice(2, 10),
     autoContinueCount: 0,
@@ -69,7 +75,7 @@
     if (!res.ok) {
       throw new Error(data.error || `Could not get a chat token (HTTP ${res.status}).`);
     }
-    return data.token;
+    return data;
   }
 
   async function connect() {
@@ -77,8 +83,10 @@
     state.connecting = true;
     setStatus('Connecting to the sourcing agent...');
     try {
-      state.token = await fetchToken();
-      const res = await fetch(`${DL_BASE}/conversations`, {
+      const tokenData = await fetchToken();
+      state.token = tokenData.token;
+      state.dlBase = directLineBase(tokenData.region);
+      const res = await fetch(`${state.dlBase}/conversations`, {
         method: 'POST',
         headers: { Authorization: `Bearer ${state.token}` }
       });
@@ -100,7 +108,7 @@
     if (!state.connected) return;
     addMessage(text, 'user');
     try {
-      await fetch(`${DL_BASE}/conversations/${state.conversationId}/activities`, {
+      await fetch(`${state.dlBase}/conversations/${state.conversationId}/activities`, {
         method: 'POST',
         headers: { Authorization: `Bearer ${state.token}`, 'Content-Type': 'application/json' },
         body: JSON.stringify({ type: 'message', from: { id: state.userId }, text })
@@ -116,7 +124,7 @@
     while (state.connected) {
       try {
         const url =
-          `${DL_BASE}/conversations/${state.conversationId}/activities` +
+          `${state.dlBase}/conversations/${state.conversationId}/activities` +
           (state.watermark ? `?watermark=${encodeURIComponent(state.watermark)}` : '');
         const res = await fetch(url, { headers: { Authorization: `Bearer ${state.token}` } });
         if (res.ok) {
