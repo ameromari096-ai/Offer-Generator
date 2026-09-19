@@ -9,6 +9,11 @@
   const INTRO_PDF_PATH = 'assets/purehealth-introduction-2026.pdf';
   const DRAFT_STORE_KEY = 'ph-interview-drafts';
 
+  // Stop the browser from navigating to a file dropped outside the CV drop zone.
+  ['dragover', 'drop'].forEach((evt) =>
+    window.addEventListener(evt, (e) => e.preventDefault())
+  );
+
   const state = {
     cvFile: null,
     cvArrayBuffer: null,
@@ -52,20 +57,31 @@
   el('addInterviewerBtn').addEventListener('click', () => addInterviewerRow());
   addInterviewerRow();
 
-  // ---------- CV extraction ----------
-  el('cvInput').addEventListener('change', async (e) => {
-    const file = e.target.files[0];
+  // ---------- CV extraction (file picker + drag-and-drop share this) ----------
+  const dropZone = el('cvDropZone');
+  const cvInput = el('cvInput');
+
+  async function handleCvFile(file) {
     const statusEl = el('cvStatus');
     if (!file) {
       state.cvFile = null;
       state.cvArrayBuffer = null;
       state.cvExtraction = null;
       statusEl.textContent = '';
+      dropZone.classList.remove('has-file');
       return;
     }
+
+    const ext = (file.name.split('.').pop() || '').toLowerCase();
+    if (!['pdf', 'docx', 'txt'].includes(ext)) {
+      statusEl.innerHTML = `<span class="warn-text">"${templates.escapeHtml(file.name)}" is not a supported CV file type. Please use a PDF, DOCX, or TXT file.</span>`;
+      return;
+    }
+
     statusEl.textContent = 'Extracting candidate details from CV...';
     state.cvFile = file;
     state.cvArrayBuffer = await file.arrayBuffer();
+    dropZone.classList.add('has-file');
 
     const result = await extract.extractCandidateDetails(file);
     state.cvExtraction = result;
@@ -84,6 +100,39 @@
       parts.push('Extraction looks confident, but please double-check the fields above.');
     }
     statusEl.innerHTML = parts.join(' ');
+  }
+
+  cvInput.addEventListener('change', (e) => handleCvFile(e.target.files[0]));
+
+  ['dragenter', 'dragover'].forEach((evt) =>
+    dropZone.addEventListener(evt, (e) => {
+      e.preventDefault();
+      e.stopPropagation();
+      dropZone.classList.add('dragover');
+    })
+  );
+  ['dragleave', 'dragend'].forEach((evt) =>
+    dropZone.addEventListener(evt, (e) => {
+      e.preventDefault();
+      e.stopPropagation();
+      if (evt === 'dragleave' && dropZone.contains(e.relatedTarget)) return;
+      dropZone.classList.remove('dragover');
+    })
+  );
+  dropZone.addEventListener('drop', (e) => {
+    e.preventDefault();
+    e.stopPropagation();
+    dropZone.classList.remove('dragover');
+    const file = e.dataTransfer.files && e.dataTransfer.files[0];
+    if (!file) return;
+    try {
+      const dt = new DataTransfer();
+      dt.items.add(file);
+      cvInput.files = dt.files;
+    } catch (err) {
+      /* DataTransfer construction can fail in older browsers; extraction still runs */
+    }
+    handleCvFile(file);
   });
 
   // ---------- Interview type ----------

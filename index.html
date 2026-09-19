@@ -32,7 +32,18 @@
     <h2>Candidate CV <span class="optional">(optional)</span></h2>
     <p class="hint">Upload the candidate's CV to auto-fill their name and email. Only the name, email, filename, and a
       reference ID are extracted &mdash; no other CV content is read or stored.</p>
-    <input type="file" id="cvInput" accept=".pdf,.docx,.txt">
+    <div id="cvDropZone" class="dropzone">
+      <input type="file" id="cvInput" class="dropzone__input" accept=".pdf,.docx,.txt">
+      <label for="cvInput" class="dropzone__label">
+        <svg class="dropzone__icon" width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+          <path d="M12 15V3"></path>
+          <path d="M7 8l5-5 5 5"></path>
+          <path d="M4 15v4a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-4"></path>
+        </svg>
+        <span class="dropzone__text"><strong>Drag and drop</strong> the CV here, or <span class="dropzone__browse">browse</span></span>
+        <span class="dropzone__hint">PDF, DOCX, or TXT</span>
+      </label>
+    </div>
     <div id="cvStatus" class="status-line"></div>
 
     <h2>Candidate</h2>
