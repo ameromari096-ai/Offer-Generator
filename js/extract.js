@@ -146,35 +146,43 @@
     const reference = `CV-${Date.now().toString(36).toUpperCase()}`;
     const ext = (file.name.split('.').pop() || '').toLowerCase();
     let text = '';
-    let unsupported = false;
+    let failureReason = null; // 'unsupported_type' | 'reader_unavailable' | 'parse_error' | 'no_text' | null
     try {
       if (ext === 'pdf') {
         if (!global.pdfjsLib) {
-          unsupported = true;
+          failureReason = 'reader_unavailable';
         } else {
           text = await readAsPdfText(file);
         }
       } else if (ext === 'docx') {
         if (!global.mammoth) {
-          unsupported = true;
+          failureReason = 'reader_unavailable';
         } else {
           text = await readAsDocxText(file);
         }
       } else if (ext === 'txt') {
         text = await readAsText(file);
       } else {
-        unsupported = true;
+        failureReason = 'unsupported_type';
       }
     } catch (err) {
-      unsupported = true;
+      failureReason = 'parse_error';
     }
-    if (!unsupported && !text.trim()) {
-      unsupported = true;
+    if (!failureReason && !text.trim()) {
+      failureReason = 'no_text';
     }
 
     const result = extractFromText(text, file.name);
+    const unsupported = Boolean(failureReason);
     const uncertain =
       unsupported || result.nameConfidence === 'low' || result.emailConfidence === 'low';
+
+    const failureMessages = {
+      unsupported_type: `"${file.name}" is not a supported CV file type (use PDF, DOCX, or TXT).`,
+      reader_unavailable: `The reader library for "${file.name}" failed to load — try reloading the page.`,
+      parse_error: `"${file.name}" could not be parsed — it may be corrupted or password-protected.`,
+      no_text: `No selectable text was found in "${file.name}" — it may be a scanned or image-based PDF (common with visually-designed CV templates) with no real text layer.`
+    };
 
     return {
       name: result.name,
@@ -185,7 +193,7 @@
       reference,
       status: unsupported ? 'unsupported' : uncertain ? 'uncertain' : 'ok',
       warning: unsupported
-        ? `Could not automatically read text from "${file.name}" (the file type is unsupported, or the reader library failed to load — check your internet connection). Please enter the candidate name and email manually.`
+        ? `${failureMessages[failureReason]} Please enter the candidate name and email manually.`
         : uncertain
         ? 'Some extracted details are unconfirmed. Please review and correct the candidate name/email below.'
         : null

@@ -34,15 +34,17 @@ A static website has no such backend or credentials, so this implementation:
   Replace that file with the approved PDF before using this in production —
   the app attaches whatever file exists at that path.
 - **Extracts CV details entirely in your browser** (via pdf.js / mammoth.js,
-  loaded from a CDN) — no CV content is uploaded anywhere. If those libraries
-  can't load (e.g. no internet access) or the file type is unsupported, the
-  app tells you and asks you to enter the candidate's name/email manually.
+  vendored in `vendor/` — see `vendor/README.md`) — no CV content is uploaded
+  anywhere. A scanned/image-based PDF (no real text layer, common with
+  visually-designed templates) can't be read this way; the app tells you
+  clearly when that happens and asks you to enter the candidate's name/email
+  manually.
 
 ## Using it
 
 1. Serve the folder over HTTP (opening `index.html` directly via `file://`
-   also works for the core flow, but the CDN-loaded CV parsers may be blocked
-   by some browsers under `file://`). For local testing:
+   also works for the core flow, but some browsers block Web Workers — used
+   by the PDF parser — under `file://`). For local testing:
    ```
    python3 -m http.server 8000
    ```
@@ -70,7 +72,9 @@ js/ics.js                               .ics (calendar draft) file builder
 js/eml.js                               .eml (email draft) file builder
 js/main.js                              Wizard state machine / UI wiring
 assets/purehealth-introduction-2026.pdf Placeholder attachment — replace with the real file
+vendor/                                 Vendored pdf.js + mammoth.js (see vendor/README.md)
 ```
 
 No build step or dependencies are required beyond a modern browser; pdf.js
-and mammoth.js are loaded from a CDN only when a CV is uploaded.
+and mammoth.js ship as local files under `vendor/` rather than a CDN, so CV
+parsing works even on networks that block third-party CDNs.

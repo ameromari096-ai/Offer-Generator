@@ -2,8 +2,9 @@
   const { dateUtils, timeUtils, extract, templates, ics, eml } = window.PH;
 
   if (window.pdfjsLib) {
-    window.pdfjsLib.GlobalWorkerOptions.workerSrc =
-      'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/4.0.379/pdf.worker.min.js';
+    // Same-origin, vendored copy — avoids cross-origin worker restrictions
+    // and CDN-blocking networks entirely (see vendor/README.md).
+    window.pdfjsLib.GlobalWorkerOptions.workerSrc = 'vendor/pdf.worker.min.js';
   }
 
   const INTRO_PDF_PATH = 'assets/purehealth-introduction-2026.pdf';
