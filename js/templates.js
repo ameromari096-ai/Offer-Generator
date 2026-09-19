@@ -85,6 +85,7 @@
   <p>Please reply to this email to confirm your attendance. If you require any further assistance, please feel free to contact us.</p>
   <p>For more information about PureHealth, please visit our website at:<br>
   <a href="${PUREHEALTH_URL}" target="_blank" rel="noopener">${PUREHEALTH_URL}</a></p>
+  <p>Best Regards,</p>
 </div>`;
   }
 

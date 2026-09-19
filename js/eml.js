@@ -35,7 +35,11 @@
    *   to: string (candidate email, may be empty),
    *   subject: string,
    *   html: string,
-   *   attachments: [{ filename, mimeType, arrayBuffer }]
+   *   attachments: [{ filename, mimeType, arrayBuffer }],
+   *   calendarIcs: string (optional) — when given, wraps html in a
+   *     multipart/alternative and adds a text/calendar;method=REQUEST
+   *     sibling part, so Outlook opens this as an editable meeting request
+   *     (with a real calendar entry) instead of a plain email.
    * }
    */
   function buildEml(options) {
@@ -49,15 +53,47 @@
       `Content-Type: multipart/mixed; boundary="${boundary}"`,
       'X-Unsent: 1'
     ];
+    if (options.calendarIcs) {
+      // Legacy Outlook marker that makes a double-clicked .eml open as an
+      // editable Meeting Request compose window instead of a plain email.
+      headers.push('Content-Class: urn:content-classes:calendarmessage');
+    }
 
     const parts = [];
-    parts.push(
-      `--${boundary}\r\n` +
-        'Content-Type: text/html; charset="utf-8"\r\n' +
-        'Content-Transfer-Encoding: quoted-printable\r\n\r\n' +
-        quotedPrintable(options.html) +
-        '\r\n'
-    );
+    if (options.calendarIcs) {
+      const altBoundary = `${boundary}_ALT`;
+      const plainText = htmlToPlainText(options.html);
+      parts.push(
+        `--${boundary}\r\n` +
+          `Content-Type: multipart/alternative; boundary="${altBoundary}"\r\n\r\n` +
+          `--${altBoundary}\r\n` +
+          'Content-Type: text/plain; charset="utf-8"\r\n' +
+          'Content-Transfer-Encoding: quoted-printable\r\n\r\n' +
+          quotedPrintable(plainText) +
+          '\r\n' +
+          `--${altBoundary}\r\n` +
+          'Content-Type: text/html; charset="utf-8"\r\n' +
+          'Content-Transfer-Encoding: quoted-printable\r\n\r\n' +
+          quotedPrintable(options.html) +
+          '\r\n' +
+          `--${altBoundary}--\r\n`
+      );
+      parts.push(
+        `--${boundary}\r\n` +
+          'Content-Type: text/calendar; method=REQUEST; charset="utf-8"\r\n' +
+          'Content-Transfer-Encoding: quoted-printable\r\n\r\n' +
+          quotedPrintable(options.calendarIcs) +
+          '\r\n'
+      );
+    } else {
+      parts.push(
+        `--${boundary}\r\n` +
+          'Content-Type: text/html; charset="utf-8"\r\n' +
+          'Content-Transfer-Encoding: quoted-printable\r\n\r\n' +
+          quotedPrintable(options.html) +
+          '\r\n'
+      );
+    }
 
     for (const att of attachments) {
       const b64 = chunkBase64(arrayBufferToBase64(att.arrayBuffer));
@@ -74,6 +110,23 @@
     parts.push(`--${boundary}--\r\n`);
 
     return headers.join('\r\n') + '\r\n\r\n' + parts.join('');
+  }
+
+  // Minimal HTML-to-text conversion for the plain-text alternative part —
+  // good enough for a fallback view, not meant to preserve exact layout.
+  function htmlToPlainText(html) {
+    return String(html || '')
+      .replace(/<style[\s\S]*?<\/style>/gi, '')
+      .replace(/<br\s*\/?>/gi, '\n')
+      .replace(/<\/(p|div|tr|table|li)>/gi, '\n')
+      .replace(/<[^>]+>/g, '')
+      .replace(/&nbsp;/g, ' ')
+      .replace(/&amp;/g, '&')
+      .replace(/&lt;/g, '<')
+      .replace(/&gt;/g, '>')
+      .replace(/&quot;/g, '"')
+      .replace(/\n{3,}/g, '\n\n')
+      .trim();
   }
 
   function quotedPrintable(str) {

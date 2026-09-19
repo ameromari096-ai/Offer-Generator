@@ -16,11 +16,16 @@ A self-contained website with two tools:
 connection to Outlook, Microsoft Graph, or SharePoint — it produces two files
 you download and finish in Outlook yourself:
 
-- **`<request-id>-email-draft.eml`** — the candidate-facing interview email.
-  Opening this file (e.g. double-clicking it, or "Open" from your downloads)
-  creates a fully editable, **unsent** email draft in Outlook, complete with
-  the candidate email as recipient, the formatted HTML body, and attachments.
-  Add interviewer addresses to Cc/To if needed and send it yourself.
+- **`<request-id>-meeting-invite.eml`** — the candidate-facing interview
+  invite. Opening this file (e.g. double-clicking it, or "Open" from your
+  downloads) creates a fully editable, **unsent** Outlook meeting request —
+  a real calendar entry with the resolved date/time, location (office
+  address or the Teams link), the candidate pre-added as an attendee, the
+  formatted HTML body, and attachments. Add interviewer addresses as
+  additional attendees if needed and send it yourself; it never books
+  anything until you do. (Classic Outlook desktop recognizes this format
+  best — other mail clients may open it as a plain email with a `.ics`
+  attachment instead of a native meeting compose window.)
 - **`<request-id>-candidate-access-draft.eml`** — a short internal email
   ("Subject: Candidate Access") asking your access/facilities team to grant
   the candidate access, listing their name, email, mobile number, and the
@@ -75,11 +80,12 @@ A static website has no such backend or credentials, so this implementation:
 index.html                              Interview Scheduling Assistant markup / wizard steps
 sourcing.html                           Candidate Sourcing Agent markup
 styles.css                              Styling for both tools
-js/dateUtils.js                         UAE date resolution ("next Monday", etc.)
+js/dateUtils.js                         UAE (Gulf Standard Time) date calculations
 js/timeUtils.js                         Start/end time calculation, 12h formatting
 js/extract.js                           Client-side CV name/email extraction + raw text extraction (JD upload)
 js/templates.js                         Email HTML template + shared escapeHtml helper
-js/eml.js                               .eml (email draft) file builder
+js/ics.js                               iCalendar METHOD:REQUEST meeting-invite builder
+js/eml.js                               .eml (email/meeting-invite) file builder
 js/main.js                              Interview Scheduling wizard state machine / UI wiring
 js/sourcingPrompt.js                    Builds the sourcing brief text from the filter panel's state
 js/sourcingExcel.js                     Validates candidate JSON and builds the .xlsx shortlist — used only
