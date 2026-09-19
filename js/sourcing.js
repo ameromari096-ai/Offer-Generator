@@ -137,8 +137,7 @@
       },
       profileCount: Number(el('profileCount').value) || 15,
       sourcingDirection: document.querySelector('input[name="sourcingDirection"]:checked').value,
-      excludedOrgs: orgField.getValues(),
-      hospitalBedPriority: el('hospitalBedPriority').checked
+      excludedOrgs: orgField.getValues()
     };
   }
 

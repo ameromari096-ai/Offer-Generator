@@ -40,8 +40,7 @@
    *   jobTitle: string[], yearsExperience, industry: string[], companySize: string[],
    *   targetCompanies: string[], keywords: string[], briefingText, jdText,
    *   geography: { countries: string[], global: boolean, customLocations: string[], exclusions: string },
-   *   profileCount, sourcingDirection: 'external'|'internal', excludedOrgs: string[],
-   *   hospitalBedPriority: boolean
+   *   profileCount, sourcingDirection: 'external'|'internal', excludedOrgs: string[]
    * }
    */
   function buildSourcingBrief(state) {
@@ -81,7 +80,7 @@ Target geography: ${geoLine}
 ${state.geography.exclusions ? `Geographic exclusions: ${state.geography.exclusions}\n` : ''}Number of profiles required: ${targetCount} — this is a REQUIREMENT, not a target to approximate. Do not stop short of it unless you have exhausted the escalation ladder below.
 Sourcing direction: ${state.sourcingDirection === 'internal' ? 'INTERNAL (search only within the listed entities)' : 'EXTERNAL (exclude the listed entities)'}
 ${orgList}
-${state.hospitalBedPriority ? 'For hospitals/healthcare organizations: prioritize by bed capacity, and prefer private hospitals over public/government ones when comparable in size.\n' : ''}
+
 === SOURCING RULES ===
 - Only LinkedIn public profiles, English-language only. Never fabricate a candidate or a LinkedIn URL — only include profiles you actually found.
 - Prefer large, well-known organizations, judged as prominent within the relevant industry AND geography — not necessarily globally famous.
