@@ -1,0 +1,164 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>PureHealth Interview Scheduling Assistant</title>
+<link rel="stylesheet" href="styles.css">
+</head>
+<body>
+<header class="app-header">
+  <div class="app-header__inner">
+    <div class="brand">
+      <span class="brand__mark">PH</span>
+      <div>
+        <h1>PureHealth Interview Scheduling Assistant</h1>
+        <p class="tagline">Collect details &middot; resolve UAE dates &middot; prepare unsent calendar &amp; email drafts</p>
+      </div>
+    </div>
+    <div class="policy-badge">Never sends automatically &mdash; every draft is reviewed by you before it goes out</div>
+  </div>
+</header>
+
+<main class="app-main">
+  <ol class="steps" id="stepIndicator">
+    <li data-step="details" class="active">1. Interview Details</li>
+    <li data-step="preview">2. Preview &amp; Approval</li>
+    <li data-step="done">3. Drafts</li>
+  </ol>
+
+  <!-- STEP 1: DETAILS -->
+  <section id="detailsSection" class="card">
+    <h2>Candidate CV <span class="optional">(optional)</span></h2>
+    <p class="hint">Upload the candidate's CV to auto-fill their name and email. Only the name, email, filename, and a
+      reference ID are extracted &mdash; no other CV content is read or stored.</p>
+    <input type="file" id="cvInput" accept=".pdf,.docx,.txt">
+    <div id="cvStatus" class="status-line"></div>
+
+    <h2>Candidate</h2>
+    <div class="grid-2">
+      <label>Candidate full name <span class="req">*</span>
+        <input type="text" id="candidateName" placeholder="e.g. Sara Al Mansoori">
+      </label>
+      <label>Candidate email <span class="req">*</span>
+        <input type="email" id="candidateEmail" placeholder="candidate@example.com">
+      </label>
+    </div>
+    <p class="hint">A preview can be generated without the candidate email, but the email draft requires it.</p>
+
+    <h2>Role</h2>
+    <label>Job title <span class="req">*</span>
+      <input type="text" id="jobTitle" placeholder="e.g. Senior Data Analyst">
+    </label>
+
+    <h2>Interviewer(s)</h2>
+    <p class="hint">Add interviewers in the order they should appear. Job titles are optional. Interviewer email
+      addresses are never entered here &mdash; you add those manually in Outlook before sending.</p>
+    <div id="interviewerRows"></div>
+    <button type="button" id="addInterviewerBtn" class="btn-secondary">+ Add interviewer</button>
+
+    <h2>Interview Type</h2>
+    <div class="radio-row">
+      <label><input type="radio" name="interviewType" value="In Person" checked> In Person</label>
+      <label><input type="radio" name="interviewType" value="Online"> Online</label>
+    </div>
+    <div id="teamsUrlField" class="hidden">
+      <label>Genuine Microsoft Teams join link <span class="req">*</span>
+        <input type="url" id="teamsUrl" placeholder="https://teams.microsoft.com/l/meetup-join/...">
+      </label>
+      <p class="hint">Paste the real join link from the Teams meeting you have created. A placeholder or invented
+        link will never be accepted.</p>
+    </div>
+
+    <h2>Date</h2>
+    <div class="grid-2">
+      <label>Type a date phrase <span class="hint-inline">(e.g. "tomorrow", "next Monday")</span>
+        <input type="text" id="datePhrase" placeholder="next Monday">
+      </label>
+      <label>Or pick an exact date
+        <input type="date" id="dateInput">
+      </label>
+    </div>
+    <div class="row-inline">
+      <button type="button" id="resolveDateBtn" class="btn-secondary">Resolve date</button>
+      <span id="resolvedDateLabel" class="resolved-label"></span>
+    </div>
+    <div id="dateAmbiguous" class="hidden"></div>
+
+    <h2>Time</h2>
+    <div class="grid-3">
+      <label>Start time <span class="req">*</span>
+        <input type="time" id="startTime">
+      </label>
+      <label>Duration (minutes) <span class="req">*</span>
+        <input type="number" id="duration" min="1" step="1" placeholder="45">
+      </label>
+      <label>End time <span class="hint-inline">(optional override)</span>
+        <input type="time" id="endTimeOverride">
+      </label>
+    </div>
+    <div id="timeConflict" class="hidden conflict-box"></div>
+    <div id="timeSummary" class="resolved-label"></div>
+
+    <div id="formErrors" class="error-box hidden"></div>
+
+    <div class="actions">
+      <button type="button" id="continueBtn" class="btn-primary">Continue to preview</button>
+    </div>
+  </section>
+
+  <!-- STEP 2: PREVIEW -->
+  <section id="previewSection" class="card hidden">
+    <h2>Preview</h2>
+    <div id="previewWarnings"></div>
+    <dl class="preview-list" id="previewList"></dl>
+
+    <h3>Email subject</h3>
+    <div class="mono-box" id="previewSubject"></div>
+
+    <h3>Candidate-facing email body</h3>
+    <div class="email-preview-frame" id="previewEmailBody"></div>
+
+    <p class="approval-question">Create the unsent calendar draft and Outlook email draft with these details?</p>
+    <div class="actions">
+      <button type="button" id="backToEditBtn" class="btn-secondary">Go back and edit</button>
+      <button type="button" id="approveBtn" class="btn-primary">Yes, create the drafts</button>
+    </div>
+  </section>
+
+  <!-- STEP 3: DONE -->
+  <section id="doneSection" class="card hidden">
+    <h2>Drafts ready for your review</h2>
+    <div id="doneMessages"></div>
+
+    <div class="download-row">
+      <a id="downloadIcs" class="btn-primary hidden" download>Download calendar draft (.ics)</a>
+      <a id="downloadEml" class="btn-primary hidden" download>Download email draft (.eml)</a>
+      <button type="button" id="copyHtmlBtn" class="btn-secondary hidden">Copy email HTML</button>
+    </div>
+
+    <h3>Final verification</h3>
+    <ul class="checklist" id="verificationChecklist"></ul>
+
+    <div class="actions">
+      <button type="button" id="startOverBtn" class="btn-secondary">Start a new request</button>
+    </div>
+  </section>
+</main>
+
+<footer class="app-footer">
+  <p>This assistant never sends emails or calendar invitations automatically. Review every draft, add interviewer
+    email addresses, and send manually from Outlook.</p>
+</footer>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/4.0.379/pdf.min.js" defer></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/mammoth/1.6.0/mammoth.browser.min.js" defer></script>
+<script src="js/dateUtils.js"></script>
+<script src="js/timeUtils.js"></script>
+<script src="js/extract.js"></script>
+<script src="js/templates.js"></script>
+<script src="js/ics.js"></script>
+<script src="js/eml.js"></script>
+<script src="js/main.js" defer></script>
+</body>
+</html>
