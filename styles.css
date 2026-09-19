@@ -1,7 +1,8 @@
 :root {
-  --brand: #0b5c53;
-  --brand-dark: #073e38;
-  --brand-light: #e6f2f0;
+  /* PureHealth wordmark teal, sampled from the brand logo. */
+  --brand: #175a70;
+  --brand-dark: #0e3f4f;
+  --brand-light: #e7f1f3;
   --text: #1f2933;
   --muted: #5b6b73;
   --border: #d7dee1;
@@ -23,9 +24,10 @@ body {
 }
 
 .app-header {
-  background: linear-gradient(135deg, var(--brand), var(--brand-dark));
-  color: #fff;
-  padding: 20px 24px;
+  background: #ffffff;
+  color: var(--text);
+  padding: 18px 24px;
+  border-bottom: 3px solid var(--brand);
 }
 .app-header__inner {
   max-width: 900px;
@@ -36,27 +38,23 @@ body {
   justify-content: space-between;
   gap: 12px;
 }
-.brand { display: flex; align-items: center; gap: 14px; }
-.brand__mark {
-  background: #fff;
-  color: var(--brand-dark);
-  font-weight: 700;
-  border-radius: 10px;
-  width: 46px;
-  height: 46px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  font-size: 16px;
+.brand { display: flex; align-items: center; gap: 16px; }
+.brand__logo { height: 40px; width: auto; display: block; }
+.brand__divider {
+  width: 1px;
+  height: 34px;
+  background: var(--border);
 }
-.app-header h1 { font-size: 20px; margin: 0; }
-.tagline { margin: 2px 0 0; font-size: 13px; opacity: 0.9; }
+.app-header h1 { font-size: 19px; margin: 0; color: var(--brand-dark); }
+.tagline { margin: 2px 0 0; font-size: 13px; color: var(--muted); }
 .policy-badge {
-  background: rgba(255,255,255,0.12);
-  border: 1px solid rgba(255,255,255,0.35);
+  background: var(--brand-light);
+  border: 1px solid var(--brand);
+  color: var(--brand-dark);
   border-radius: 999px;
   padding: 8px 14px;
   font-size: 12.5px;
+  font-weight: 600;
   max-width: 320px;
 }
 
@@ -283,6 +281,17 @@ input:focus { outline: 2px solid var(--brand); outline-offset: 1px; }
   font-weight: 700;
   font-size: 15px;
   margin-top: 26px;
+}
+
+.recruiter-note {
+  background: var(--brand-light);
+  border: 1px solid var(--brand);
+  color: var(--brand-dark);
+  border-radius: 8px;
+  padding: 12px 14px;
+  font-size: 13.5px;
+  font-weight: 600;
+  margin: 14px 0;
 }
 
 .download-row { display: flex; gap: 12px; flex-wrap: wrap; margin: 16px 0 24px; }

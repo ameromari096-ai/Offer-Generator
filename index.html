@@ -10,10 +10,11 @@
 <header class="app-header">
   <div class="app-header__inner">
     <div class="brand">
-      <span class="brand__mark">PH</span>
+      <img src="assets/purehealth-logo.png" alt="PureHealth" class="brand__logo">
+      <div class="brand__divider" aria-hidden="true"></div>
       <div>
-        <h1>PureHealth Interview Scheduling Assistant</h1>
-        <p class="tagline">Collect details &middot; resolve UAE dates &middot; prepare unsent calendar &amp; email drafts</p>
+        <h1>Interview Scheduling Assistant</h1>
+        <p class="tagline">Collect details &middot; resolve UAE dates &middot; prepare an unsent email draft</p>
       </div>
     </div>
     <div class="policy-badge">Never sends automatically &mdash; every draft is reviewed by you before it goes out</div>
@@ -24,7 +25,7 @@
   <ol class="steps" id="stepIndicator">
     <li data-step="details" class="active">1. Interview Details</li>
     <li data-step="preview">2. Preview &amp; Approval</li>
-    <li data-step="done">3. Drafts</li>
+    <li data-step="done">3. Email Draft</li>
   </ol>
 
   <!-- STEP 1: DETAILS -->
@@ -130,22 +131,21 @@
     <h3>Candidate-facing email body</h3>
     <div class="email-preview-frame" id="previewEmailBody"></div>
 
-    <p class="approval-question">Create the unsent calendar draft and Outlook email draft with these details?</p>
+    <p class="approval-question">Create the unsent Outlook email draft with these details?</p>
     <div class="actions">
       <button type="button" id="backToEditBtn" class="btn-secondary">Go back and edit</button>
-      <button type="button" id="approveBtn" class="btn-primary">Yes, create the drafts</button>
+      <button type="button" id="approveBtn" class="btn-primary">Yes, create the email draft</button>
     </div>
   </section>
 
   <!-- STEP 3: DONE -->
   <section id="doneSection" class="card hidden">
-    <h2>Drafts ready for your review</h2>
+    <h2>Email draft ready for your review</h2>
     <div id="doneMessages"></div>
+    <div id="recruiterReminder" class="recruiter-note"></div>
 
     <div class="download-row">
-      <a id="downloadIcs" class="btn-primary hidden" download>Download calendar draft (.ics)</a>
       <a id="downloadEml" class="btn-primary hidden" download>Download email draft (.eml)</a>
-      <button type="button" id="copyHtmlBtn" class="btn-secondary hidden">Copy email HTML</button>
     </div>
 
     <h3>Final verification</h3>
@@ -158,7 +158,7 @@
 </main>
 
 <footer class="app-footer">
-  <p>This assistant never sends emails or calendar invitations automatically. Review every draft, add interviewer
+  <p>This assistant never sends email automatically. Review the draft, add interviewer
     email addresses, and send manually from Outlook.</p>
 </footer>
 
@@ -168,7 +168,6 @@
 <script src="js/timeUtils.js"></script>
 <script src="js/extract.js"></script>
 <script src="js/templates.js"></script>
-<script src="js/ics.js"></script>
 <script src="js/eml.js"></script>
 <script src="js/main.js" defer></script>
 </body>

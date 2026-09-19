@@ -1,5 +1,5 @@
 (function () {
-  const { dateUtils, timeUtils, extract, templates, ics, eml } = window.PH;
+  const { dateUtils, timeUtils, extract, templates, eml } = window.PH;
 
   if (window.pdfjsLib) {
     // Same-origin, vendored copy — avoids cross-origin worker restrictions
@@ -320,7 +320,7 @@
     warningsBox.innerHTML = '';
     const warnings = [];
     if (state.noCv) {
-      warnings.push('Warning: No candidate CV was provided. The drafts can still be created, but the candidate CV will not be attached.');
+      warnings.push('Warning: No candidate CV was provided. The email draft can still be created, but the candidate CV will not be attached.');
     }
     if (!form.candidateEmail) {
       warnings.push('Note: No candidate email was provided. A preview is shown, but the email draft cannot be created until an email address is added.');
@@ -355,12 +355,6 @@
       ['Interview location', location],
       [interviewerLabel, interviewersText],
       ['Interviewer email addresses', 'To be added manually by the recruiter'],
-      [
-        'Calendar draft configuration',
-        form.interviewType === 'Online'
-          ? 'Teams-enabled, unsent appointment; genuine Teams join link included'
-          : 'In-person, unsent appointment; online meeting functionality disabled, no Teams link'
-      ],
       ['Attachments', `PureHealth Introduction 2026.pdf${state.cvFile ? `, ${state.cvFile.name}` : ''}`],
       ['Warnings', warnings.length ? warnings.join(' ') : 'None']
     ];
@@ -457,7 +451,7 @@
 
     state.approved = true;
     el('approveBtn').disabled = true;
-    el('approveBtn').textContent = 'Creating drafts...';
+    el('approveBtn').textContent = 'Creating email draft...';
 
     // 2 & 3. Scheduling request ID + duplicate check.
     const store = loadDraftStore();
@@ -472,43 +466,12 @@
 
     const messages = [];
     if (isDuplicate) {
-      messages.push(`An unsent draft already exists for this exact request (ID ${requestId}). Reusing it instead of creating a duplicate.`);
+      messages.push(`An unsent email draft already exists for this exact request (ID ${requestId}). Reusing it instead of creating a duplicate.`);
     } else {
       messages.push(`Scheduling request ID: ${requestId}`);
     }
 
-    // 4. Calendar draft (Prepare Calendar Draft).
-    const location =
-      form.interviewType === 'In Person' ? templates.OFFICE_ADDRESS : 'Microsoft Teams Meeting';
-    const description = templates.buildCalendarDescription({
-      candidateName: form.candidateName,
-      candidateEmail: form.candidateEmail,
-      jobTitle: form.jobTitle,
-      dateLabel: state.resolvedDateLabel,
-      timeLabel: state.timeLabel,
-      interviewType: form.interviewType,
-      teamsUrl: form.teamsUrl,
-      interviewers: form.interviewers
-    });
-    const icsContent = ics.buildIcs({
-      requestId,
-      subject: state.subject,
-      dayKey: state.resolvedDayKey,
-      startMinutes: state.startMinutes,
-      endMinutes: state.endMinutes,
-      location,
-      description
-    });
-    const icsBlob = new Blob([icsContent], { type: 'text/calendar;charset=utf-8' });
-    const icsUrl = URL.createObjectURL(icsBlob);
-    const icsLink = el('downloadIcs');
-    icsLink.href = icsUrl;
-    icsLink.download = `${requestId}-calendar-draft.ics`;
-    icsLink.classList.remove('hidden');
-    messages.push('Unsent calendar draft created (Prepare Calendar Draft).');
-
-    // 5. Online: Teams URL already supplied and validated above (genuine link).
-    // 6. Retrieve PureHealth Introduction 2026.pdf (Get PureHealth Introduction).
+    // 4. Retrieve PureHealth Introduction 2026.pdf (Get PureHealth Introduction).
     const intro = await fetchIntroPdf();
     let emailCreated = false;
 
@@ -517,7 +480,7 @@
     } else if (!intro.ok) {
       messages.push('Email draft NOT created: the PureHealth Introduction 2026.pdf could not be retrieved (Get PureHealth Introduction failed).');
     } else {
-      // 7. Create Outlook Interview Email Draft.
+      // 5. Create Outlook Interview Email Draft.
       const attachments = [
         { filename: templates.INTRO_FILENAME, mimeType: 'application/pdf', arrayBuffer: intro.arrayBuffer }
       ];
@@ -544,22 +507,13 @@
       messages.push(`Unsent Outlook email draft created with ${attachments.length} attachment(s) (Create Outlook Interview Email Draft).`);
     }
 
-    el('copyHtmlBtn').classList.remove('hidden');
-    el('copyHtmlBtn').onclick = async () => {
-      try {
-        await navigator.clipboard.writeText(state.emailHtml);
-        el('copyHtmlBtn').textContent = 'Copied!';
-        setTimeout(() => (el('copyHtmlBtn').textContent = 'Copy email HTML'), 1500);
-      } catch (e) {
-        alert('Could not copy automatically. Please select and copy the email preview manually.');
-      }
-    };
+    el('recruiterReminder').textContent = templates.RECRUITER_REMINDER;
 
     renderDoneMessages(messages);
     renderVerificationChecklist(form, { emailCreated, introOk: intro.ok, isDuplicate });
 
     el('approveBtn').disabled = false;
-    el('approveBtn').textContent = 'Yes, create the drafts';
+    el('approveBtn').textContent = 'Yes, create the email draft';
     goToStep('done');
   });
 
@@ -573,7 +527,7 @@
     const typeCheckLabel =
       form.interviewType === 'In Person'
         ? 'In Person interview has no Teams link'
-        : 'Online interview uses a genuine Teams URL in both drafts';
+        : 'Online interview uses a genuine Teams URL in the email draft';
     const emailCheckOk = flags.emailCreated || !form.candidateEmail;
     const emailCheckLabel = flags.emailCreated
       ? 'Email draft created'
@@ -590,10 +544,9 @@
       [Boolean(state.resolvedDayKey), 'Date resolved and matches weekday shown'],
       [state.resolvedDayKey >= dateUtils.uaeTodayDayKey(), 'Interview is not in the past'],
       [state.endMinutes > state.startMinutes, 'End time is later than start time'],
-      [true, 'Calendar and email times match (same source values)'],
       [typeCheckOk, typeCheckLabel],
-      [true, 'Calendar and email drafts remain unsent'],
-      [true, flags.isDuplicate ? 'Existing draft reused (no duplicate created)' : 'No duplicate drafts were created'],
+      [true, 'Email draft remains unsent'],
+      [true, flags.isDuplicate ? 'Existing email draft reused (no duplicate created)' : 'No duplicate email draft was created'],
       [flags.introOk, 'PureHealth Introduction file attached'],
       [state.noCv ? true : Boolean(state.cvFile), state.noCv ? 'No CV was provided (recruiter warned)' : 'Candidate CV attached'],
       [emailCheckOk, emailCheckLabel]
