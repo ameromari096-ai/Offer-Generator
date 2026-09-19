@@ -1,5 +1,5 @@
 (function () {
-  const { dateUtils, timeUtils, extract, templates, eml, ics } = window.PH;
+  const { dateUtils, timeUtils, extract, templates, eml } = window.PH;
 
   if (window.pdfjsLib) {
     // Same-origin, vendored copy — avoids cross-origin worker restrictions
@@ -456,34 +456,20 @@
           arrayBuffer: state.cvArrayBuffer
         });
       }
-      const location = form.interviewType === 'In Person' ? templates.OFFICE_ADDRESS : form.teamsUrl;
-      const calendarIcs = ics.buildMeetingRequest({
-        uid: `${requestId}@purehealth-tools`,
-        dayKey: state.resolvedDayKey,
-        startMinutes: state.startMinutes,
-        endMinutes: state.endMinutes,
-        summary: state.subject,
-        location,
-        description: `Interview for ${form.jobTitle}. ${state.resolvedDateLabel}, ${state.timeLabel}. Location: ${location}`,
-        htmlDescription: state.emailHtml,
-        attendeeName: form.candidateName,
-        attendeeEmail: form.candidateEmail
-      });
       const emlContent = eml.buildEml({
         to: form.candidateEmail,
         subject: state.subject,
         html: state.emailHtml,
-        attachments,
-        calendarIcs
+        attachments
       });
       const emlBlob = new Blob([emlContent], { type: 'message/rfc822' });
       const emlUrl = URL.createObjectURL(emlBlob);
       const emlLink = el('downloadEml');
       emlLink.href = emlUrl;
-      emlLink.download = `${requestId}-meeting-invite.eml`;
+      emlLink.download = `${requestId}-email-draft.eml`;
       emlLink.classList.remove('hidden');
       emailCreated = true;
-      messages.push(`Unsent Outlook meeting invite created with ${attachments.length} attachment(s), including a calendar entry (Create Outlook Interview Email Draft).`);
+      messages.push(`Unsent Outlook email draft created with ${attachments.length} attachment(s) (Create Outlook Interview Email Draft).`);
     }
 
     // Internal "Candidate Access" email: name, email, phone, and the same
