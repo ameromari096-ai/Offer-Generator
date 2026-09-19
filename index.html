@@ -4,7 +4,10 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>PureHealth Interview Scheduling Assistant</title>
-<link rel="stylesheet" href="styles.css">
+<!-- Bump the ?v= query string on every edit to styles.css or js/*.js so
+     browsers/CDNs that cached the old file under the same URL fetch the
+     new one instead of serving stale JS after a deploy. -->
+<link rel="stylesheet" href="styles.css?v=5">
 </head>
 <body>
 <header class="app-header">
@@ -174,11 +177,11 @@
 
 <script src="vendor/pdf.min.js" defer></script>
 <script src="vendor/mammoth.browser.min.js" defer></script>
-<script src="js/dateUtils.js"></script>
-<script src="js/timeUtils.js"></script>
-<script src="js/extract.js"></script>
-<script src="js/templates.js"></script>
-<script src="js/eml.js"></script>
-<script src="js/main.js" defer></script>
+<script src="js/dateUtils.js?v=5"></script>
+<script src="js/timeUtils.js?v=5"></script>
+<script src="js/extract.js?v=5"></script>
+<script src="js/templates.js?v=5"></script>
+<script src="js/eml.js?v=5"></script>
+<script src="js/main.js?v=5" defer></script>
 </body>
 </html>
