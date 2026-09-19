@@ -82,7 +82,8 @@ js/templates.js                         Email HTML template + shared escapeHtml 
 js/eml.js                               .eml (email draft) file builder
 js/main.js                              Interview Scheduling wizard state machine / UI wiring
 js/sourcingPrompt.js                    Builds the sourcing brief text from the filter panel's state
-js/sourcingExcel.js                     Validates pasted candidate JSON and builds the .xlsx shortlist
+js/sourcingExcel.js                     Validates candidate JSON and builds the .xlsx shortlist — used only
+                                         by the legacy Copilot Studio backend functions, not sourcing.html
 js/sourcing.js                          Candidate Sourcing page state machine / UI wiring
 assets/purehealth-logo.png              Brand logo used in the header
 assets/purehealth-introduction-2026.pdf Placeholder attachment — replace with the real file
@@ -106,9 +107,9 @@ third-party CDNs.
 `sourcing.html` implements a "Candidate Sourcing Agent" workflow: given a
 role brief, find real LinkedIn candidates matching it and deliver them as a
 structured shortlist Excel file, using a LinkedIn-search-style filter panel
-(job title, seniority, industry, must-haves, geography, profile count,
-internal/external sourcing direction, and the PureHealth network exclusion
-list) for the search parameters.
+(job title, years of experience, industry, company size, target companies,
+keywords, location, profile count, internal/external sourcing direction, and
+the PureHealth network exclusion list) for the search parameters.
 
 ### Why not a one-click live search?
 
@@ -122,46 +123,26 @@ steps instead of pretending to search LinkedIn itself:
    free-text briefing, and an optional uploaded/pasted job description are
    assembled into a complete, ready-to-run brief — including the full
    sourcing ruleset (search-tier escalation ladder, exclusion list, output
-   format) — for you to run in an AI assistant that can actually browse the
-   live web, e.g. **Microsoft Copilot Chat** (with web search turned on),
-   Claude, or ChatGPT.
-2. **Import results and generate the Excel file.** Paste the JSON array the
-   agent returns back into the page. Every candidate is validated against
-   the shortlist's formatting rules — exactly 3 bullets per bullet column,
-   a real-looking `linkedin.com/in/...` URL, a 0-100 match score, a valid
-   confidence label — before a real `.xlsx` file (built with the vendored
-   `xlsx` library, no server round-trip) is generated. **No candidate or
-   LinkedIn URL is ever fabricated by this tool** — it only formats and
-   checks data you bring back from a real search.
+   format) — ready to copy and paste into the PureHealth Sourcing Agent.
+2. **Open the Sourcing Agent and paste the brief in.** The agent (built on
+   Microsoft 365 Copilot Agent Builder) runs the live search itself,
+   verifies each candidate, and generates the finished shortlist as a
+   downloadable `.xlsx` file directly in the chat via its own Code
+   Interpreter tool — no JSON copy/paste, no import step, and no backend on
+   this site's side. **This site never contacts LinkedIn itself and never
+   fabricates a candidate or profile URL** — it only prepares the brief
+   handed to the agent.
 
-### Using it with Microsoft Copilot
+### Legacy: Copilot Studio backend integration
 
-No integration work, license, or backend is needed for this — it's a
-copy/paste workflow:
-
-1. Fill in the filter panel and click **Generate sourcing brief**, then
-   **Copy to clipboard**.
-2. Open [Microsoft Copilot Chat](https://copilot.microsoft.com/) (or
-   Copilot in Microsoft 365), make sure **web search** is turned on, and
-   paste the brief in as a chat message.
-3. Copy the JSON array Copilot returns and paste it into the **Import
-   results & generate the shortlist Excel** box on this page, then click
-   **Validate & preview** and **Download shortlist (.xlsx)**.
-
-### One-click Copilot Studio integration
-
-A tighter integration — a Copilot Studio agent posting its candidate JSON
-straight to a backend that validates it and builds the Excel automatically,
-returning a shareable link instead of requiring copy/paste — is implemented
-in this repo as a small serverless function (both a Netlify Function,
-`netlify/functions/generateShortlist.js`, and an Azure Function,
-`GenerateShortlist/`, are provided; pick whichever you can host — Netlify's
-free plan needs no credit card and allows commercial use, no local install
-required to deploy it). Both reuse `js/sourcingExcel.js` unchanged. See
-[`docs/copilot-studio-integration.md`](docs/copilot-studio-integration.md)
-for deployment steps for either backend option and for building the
-**Copilot Studio Workflow** that calls it — note that this must be a
-Workflow built directly inside Copilot Studio's own builder; a classic
-Power Automate cloud flow cannot be used as a Copilot Studio tool at all,
-regardless of trigger. The copy/paste workflow above keeps working
-independently either way.
+An earlier version of this tool targeted a Copilot Studio agent instead,
+with a small serverless backend (`netlify/functions/generateShortlist.js`,
+or the Azure Function equivalent under `GenerateShortlist/`) that validated
+a candidate JSON array and built the `.xlsx` file server-side, and a
+Copilot Studio Workflow that called it — see
+[`docs/copilot-studio-integration.md`](docs/copilot-studio-integration.md).
+This was abandoned in favor of the Microsoft 365 Copilot agent above
+(no per-turn search-round cap, and Excel generation built in), but the
+backend files are left in the repo in case a Copilot Studio-based
+integration is ever revisited; `sourcing.html` itself no longer calls
+either function.

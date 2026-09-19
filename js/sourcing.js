@@ -8,10 +8,6 @@
   };
 
   // ---------- Static filter options ----------
-  el('seniority').innerHTML = sourcingPrompt.SENIORITY_OPTIONS
-    .map((s) => `<option value="${templates.escapeHtml(s)}">${templates.escapeHtml(s)}</option>`)
-    .join('');
-
   const geoBox = el('geoCheckboxes');
   sourcingPrompt.GEOGRAPHY_OPTIONS.forEach((country) => {
     const id = `geo-${country.replace(/\s+/g, '-')}`;
@@ -115,9 +111,11 @@
 
     return {
       jobTitle: el('jobTitle').value.trim(),
-      seniority: el('seniority').value,
+      yearsExperience: el('yearsExperience').value.trim(),
       industry: el('industry').value.trim(),
-      mustHaves: el('mustHaves').value.split(/\r?\n/).map((s) => s.trim()).filter(Boolean),
+      companySize: el('companySize').value.trim(),
+      targetCompanies: el('targetCompanies').value.split(/\r?\n/).map((s) => s.trim()).filter(Boolean),
+      keywords: el('keywords').value.split(/\r?\n/).map((s) => s.trim()).filter(Boolean),
       briefingText: el('briefingText').value,
       jdText: state.jdText,
       geography: {

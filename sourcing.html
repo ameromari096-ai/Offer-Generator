@@ -11,7 +11,7 @@
 <!-- Bump the ?v= query string on every edit to styles.css or js/*.js so
      browsers/CDNs that cached the old file under the same URL fetch the
      new one instead of serving stale JS after a deploy. -->
-<link rel="stylesheet" href="styles.css?v=11">
+<link rel="stylesheet" href="styles.css?v=12">
 </head>
 <body>
 <header class="app-header">
@@ -42,19 +42,27 @@
         <input type="text" id="jobTitle" placeholder="e.g. ICU Nurse Manager">
       </label>
 
-      <label>Seniority
-        <select id="seniority"></select>
+      <label>Years of experience <span class="optional">(optional)</span>
+        <input type="text" id="yearsExperience" placeholder="e.g. 5+ years">
       </label>
 
       <label>Industry
         <input type="text" id="industry" placeholder="e.g. Private hospitals">
       </label>
 
-      <label>Must-have skills / requirements <span class="hint-inline">(one per line)</span>
-        <textarea id="mustHaves" rows="3" placeholder="e.g. DHA license&#10;5+ years ICU experience"></textarea>
+      <label>Company size <span class="optional">(optional)</span>
+        <input type="text" id="companySize" placeholder="e.g. 1,000+ employees">
       </label>
 
-      <h2>Geography</h2>
+      <label>Target companies <span class="hint-inline">(optional, one per line)</span>
+        <textarea id="targetCompanies" rows="2" placeholder="e.g. Cleveland Clinic Abu Dhabi&#10;Mayo Clinic"></textarea>
+      </label>
+
+      <label>Keywords <span class="hint-inline">(one per line)</span>
+        <textarea id="keywords" rows="3" placeholder="e.g. DHA license&#10;5+ years ICU experience"></textarea>
+      </label>
+
+      <h2>Location</h2>
       <div id="geoCheckboxes" class="checkbox-list"></div>
       <label class="checkbox-inline"><input type="checkbox" id="geoGlobal"> Global (no restriction)</label>
       <label>Other / custom location(s)
@@ -108,8 +116,8 @@
         <h2>Step 1 &middot; Generate the sourcing brief</h2>
         <p class="hint">This site has no server and no LinkedIn or AI API access, so it can't run a live LinkedIn
           search itself (see the README). Instead it builds a complete, ready-to-run brief &mdash; with the full
-          sourcing ruleset and every filter above baked in &mdash; ready to paste straight into the embedded
-          PureHealth Sourcing Agent chat below.</p>
+          sourcing ruleset and every filter above baked in &mdash; ready to copy and paste into the PureHealth
+          Sourcing Agent chat below.</p>
         <div class="actions actions--start">
           <button type="button" id="generateBriefBtn" class="btn-primary">Generate sourcing brief</button>
         </div>
@@ -124,11 +132,11 @@
       </section>
 
       <section class="card">
-        <h2>Chat with the PureHealth Sourcing Agent</h2>
-        <p class="hint">This is the live PureHealth Sourcing Agent (Microsoft 365 Copilot). Microsoft blocks its
-          sign-in page from loading inside an embedded frame, so it opens in its own tab instead of embedding
-          directly on this page &mdash; paste the brief there and it will search, verify, and generate the
-          shortlist Excel itself, handing you back a downloadable file right in the chat.</p>
+        <h2>Step 2 &middot; Open the Sourcing Agent</h2>
+        <p class="hint">Copy the brief above, then open the live PureHealth Sourcing Agent (Microsoft 365 Copilot)
+          and paste it in. Microsoft blocks its sign-in page from loading inside an embedded frame, so it opens
+          in its own tab &mdash; the agent will search, verify, and generate the shortlist Excel itself, handing
+          you back a downloadable file right in the chat.</p>
         <div class="actions actions--start">
           <a href="https://m365.cloud.microsoft/chat/?titleId=T_ea85d562-9d19-58f5-280a-734932a38d6c&amp;source=embedded-builder"
              target="_blank" rel="noopener" class="btn-primary">Open the Sourcing Agent chat</a>
@@ -140,14 +148,14 @@
 
 <footer class="app-footer">
   <p>This tool never contacts LinkedIn itself, and never invents a candidate or a profile URL &mdash; it only
-    prepares the search brief handed to the embedded sourcing agent.</p>
+    prepares the search brief handed to the sourcing agent.</p>
 </footer>
 
 <script src="vendor/pdf.min.js" defer></script>
 <script src="vendor/mammoth.browser.min.js" defer></script>
-<script src="js/extract.js?v=11"></script>
-<script src="js/templates.js?v=11"></script>
-<script src="js/sourcingPrompt.js?v=11"></script>
-<script src="js/sourcing.js?v=11" defer></script>
+<script src="js/extract.js?v=12"></script>
+<script src="js/templates.js?v=12"></script>
+<script src="js/sourcingPrompt.js?v=12"></script>
+<script src="js/sourcing.js?v=12" defer></script>
 </body>
 </html>
