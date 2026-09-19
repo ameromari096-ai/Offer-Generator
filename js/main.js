@@ -88,12 +88,15 @@
     state.cvExtraction = result;
 
     // Uploading a CV is a deliberate "use this candidate" action, so it
-    // overwrites whatever is currently in the name/email fields.
+    // overwrites whatever is currently in the name/email/phone fields.
     if (result.name) {
       el('candidateName').value = result.name;
     }
     if (result.email) {
       el('candidateEmail').value = result.email;
+    }
+    if (result.phone) {
+      el('candidatePhone').value = result.phone;
     }
 
     const parts = [`CV on file: ${templates.escapeHtml(result.filename)} (ref ${result.reference}).`];
@@ -266,6 +269,7 @@
     return {
       candidateName: el('candidateName').value.trim(),
       candidateEmail: el('candidateEmail').value.trim(),
+      candidatePhone: el('candidatePhone').value.trim(),
       jobTitle: el('jobTitle').value.trim(),
       interviewers: getInterviewers(),
       interviewType: document.querySelector('input[name="interviewType"]:checked').value,
@@ -345,6 +349,7 @@
     const fields = [
       ['Candidate', form.candidateName],
       ['Candidate email', form.candidateEmail || '(not provided)'],
+      ['Candidate phone', form.candidatePhone || '(not provided)'],
       ['Job title', form.jobTitle],
       ['Resolved date', state.resolvedDateLabel],
       ['Start time', timeUtils.minutesToLabel(state.startMinutes) + ' (UAE Time)'],
@@ -451,7 +456,7 @@
 
     state.approved = true;
     el('approveBtn').disabled = true;
-    el('approveBtn').textContent = 'Creating email draft...';
+    el('approveBtn').textContent = 'Creating email drafts...';
 
     // 2 & 3. Scheduling request ID + duplicate check.
     const store = loadDraftStore();
@@ -507,13 +512,39 @@
       messages.push(`Unsent Outlook email draft created with ${attachments.length} attachment(s) (Create Outlook Interview Email Draft).`);
     }
 
+    // Internal "Candidate Access" email: name, email, phone, and interview
+    // date/start time only -- no attachments, no invented recipient (the
+    // internal team's address is always added manually).
+    const accessHtml = templates.buildCandidateAccessHtml({
+      candidateName: form.candidateName,
+      candidateEmail: form.candidateEmail,
+      candidatePhone: form.candidatePhone,
+      dateLabel: state.resolvedDateLabel,
+      startTimeLabel: timeUtils.minutesToLabel(state.startMinutes) + ' (UAE Time)'
+    });
+    const accessEmlContent = eml.buildEml({
+      to: '',
+      subject: templates.CANDIDATE_ACCESS_SUBJECT,
+      html: accessHtml,
+      attachments: []
+    });
+    const accessEmlBlob = new Blob([accessEmlContent], { type: 'message/rfc822' });
+    const accessEmlLink = el('downloadAccessEml');
+    accessEmlLink.href = URL.createObjectURL(accessEmlBlob);
+    accessEmlLink.download = `${requestId}-candidate-access-draft.eml`;
+    accessEmlLink.classList.remove('hidden');
+    messages.push('Unsent candidate access email draft created.');
+    if (!form.candidateEmail || !form.candidatePhone) {
+      messages.push('Candidate access email is missing the email and/or phone number — fill in the placeholder(s) before sending.');
+    }
+
     el('recruiterReminder').textContent = templates.RECRUITER_REMINDER;
 
     renderDoneMessages(messages);
     renderVerificationChecklist(form, { emailCreated, introOk: intro.ok, isDuplicate });
 
     el('approveBtn').disabled = false;
-    el('approveBtn').textContent = 'Yes, create the email draft';
+    el('approveBtn').textContent = 'Yes, create the email drafts';
     goToStep('done');
   });
 
@@ -549,7 +580,9 @@
       [true, flags.isDuplicate ? 'Existing email draft reused (no duplicate created)' : 'No duplicate email draft was created'],
       [flags.introOk, 'PureHealth Introduction file attached'],
       [state.noCv ? true : Boolean(state.cvFile), state.noCv ? 'No CV was provided (recruiter warned)' : 'Candidate CV attached'],
-      [emailCheckOk, emailCheckLabel]
+      [emailCheckOk, emailCheckLabel],
+      [true, 'Candidate access email draft created'],
+      [Boolean(form.candidateEmail) && Boolean(form.candidatePhone), 'Candidate access email has both email and phone filled in']
     ];
     const ul = el('verificationChecklist');
     ul.innerHTML = checks

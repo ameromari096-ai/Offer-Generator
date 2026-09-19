@@ -14,7 +14,7 @@
       <div class="brand__divider" aria-hidden="true"></div>
       <div>
         <h1>Interview Scheduling Assistant</h1>
-        <p class="tagline">Collect details &middot; resolve UAE dates &middot; prepare an unsent email draft</p>
+        <p class="tagline">Collect details &middot; resolve UAE dates &middot; prepare unsent email drafts</p>
       </div>
     </div>
     <div class="policy-badge">Never sends automatically &mdash; every draft is reviewed by you before it goes out</div>
@@ -25,14 +25,14 @@
   <ol class="steps" id="stepIndicator">
     <li data-step="details" class="active">1. Interview Details</li>
     <li data-step="preview">2. Preview &amp; Approval</li>
-    <li data-step="done">3. Email Draft</li>
+    <li data-step="done">3. Email Drafts</li>
   </ol>
 
   <!-- STEP 1: DETAILS -->
   <section id="detailsSection" class="card">
     <h2>Candidate CV <span class="optional">(optional)</span></h2>
-    <p class="hint">Upload the candidate's CV to auto-fill their name and email. Only the name, email, filename, and a
-      reference ID are extracted &mdash; no other CV content is read or stored.</p>
+    <p class="hint">Upload the candidate's CV to auto-fill their name, email, and mobile number. Only those fields,
+      the filename, and a reference ID are extracted &mdash; no other CV content is read or stored.</p>
     <div id="cvDropZone" class="dropzone">
       <input type="file" id="cvInput" class="dropzone__input" accept=".pdf,.docx,.txt">
       <label for="cvInput" class="dropzone__label">
@@ -48,15 +48,19 @@
     <div id="cvStatus" class="status-line"></div>
 
     <h2>Candidate</h2>
-    <div class="grid-2">
+    <div class="grid-3">
       <label>Candidate full name <span class="req">*</span>
         <input type="text" id="candidateName" placeholder="e.g. Sara Al Mansoori">
       </label>
       <label>Candidate email <span class="req">*</span>
         <input type="email" id="candidateEmail" placeholder="candidate@example.com">
       </label>
+      <label>Candidate mobile number <span class="optional">(optional)</span>
+        <input type="tel" id="candidatePhone" placeholder="+971 50 123 4567">
+      </label>
     </div>
-    <p class="hint">A preview can be generated without the candidate email, but the email draft requires it.</p>
+    <p class="hint">A preview can be generated without the candidate email, but the email draft requires it. The
+      mobile number is used only for the internal candidate-access email.</p>
 
     <h2>Role</h2>
     <label>Job title <span class="req">*</span>
@@ -131,21 +135,22 @@
     <h3>Candidate-facing email body</h3>
     <div class="email-preview-frame" id="previewEmailBody"></div>
 
-    <p class="approval-question">Create the unsent Outlook email draft with these details?</p>
+    <p class="approval-question">Create the unsent Outlook email drafts with these details?</p>
     <div class="actions">
       <button type="button" id="backToEditBtn" class="btn-secondary">Go back and edit</button>
-      <button type="button" id="approveBtn" class="btn-primary">Yes, create the email draft</button>
+      <button type="button" id="approveBtn" class="btn-primary">Yes, create the email drafts</button>
     </div>
   </section>
 
   <!-- STEP 3: DONE -->
   <section id="doneSection" class="card hidden">
-    <h2>Email draft ready for your review</h2>
+    <h2>Email drafts ready for your review</h2>
     <div id="doneMessages"></div>
     <div id="recruiterReminder" class="recruiter-note"></div>
 
     <div class="download-row">
       <a id="downloadEml" class="btn-primary hidden" download>Download email draft (.eml)</a>
+      <a id="downloadAccessEml" class="btn-primary hidden" download>Download candidate access email (.eml)</a>
     </div>
 
     <h3>Final verification</h3>
@@ -158,7 +163,7 @@
 </main>
 
 <footer class="app-footer">
-  <p>This assistant never sends email automatically. Review the draft, add interviewer
+  <p>This assistant never sends email automatically. Review each draft, add interviewer
     email addresses, and send manually from Outlook.</p>
 </footer>
 

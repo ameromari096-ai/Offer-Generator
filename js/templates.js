@@ -88,19 +88,52 @@
 </div>`;
   }
 
+  const CANDIDATE_ACCESS_SUBJECT = 'Candidate Access';
+
+  /**
+   * Builds the internal "grant building/system access" email, listing the
+   * candidate the same way the interview email describes them (name, email,
+   * phone) plus the resolved interview date/time. No candidate is invented:
+   * a missing email or phone is shown as an explicit placeholder so the
+   * recruiter fills it in before sending, rather than the row silently
+   * looking complete with a blank.
+   * state: { candidateName, candidateEmail, candidatePhone, dateLabel,
+   *          startTimeLabel }
+   */
+  function buildCandidateAccessHtml(state) {
+    const email = state.candidateEmail || '[email not provided]';
+    const phone = state.candidatePhone || '[phone number not provided]';
+    const row = [
+      escapeHtml(state.candidateName),
+      escapeHtml(email),
+      escapeHtml(phone),
+      escapeHtml(state.dateLabel),
+      escapeHtml(state.startTimeLabel)
+    ].join(' - ');
+
+    return `<div style="font-family: Segoe UI, Arial, sans-serif; font-size: 14px; color: #222222; line-height: 1.5;">
+  <p>Hi Team,</p>
+  <p>Can we please give access to the below candidates:</p>
+  <p>1. ${row}</p>
+  <p>Thanks</p>
+</div>`;
+  }
+
   const api = {
     OFFICE_ADDRESS,
     OFFICE_MAP_URL,
     PUREHEALTH_URL,
     INTRO_FILENAME,
     RECRUITER_REMINDER,
+    CANDIDATE_ACCESS_SUBJECT,
     escapeHtml,
     firstName,
     buildSubject,
     interviewerLabel,
     interviewersHtmlList,
     locationHtml,
-    buildEmailHtml
+    buildEmailHtml,
+    buildCandidateAccessHtml
   };
 
   const root = global.PH || (global.PH = {});

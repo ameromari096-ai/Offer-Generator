@@ -3,18 +3,24 @@
 A self-contained website that implements the PureHealth Interview Scheduling
 Agent workflow: collect and validate interview details, extract candidate
 details from an uploaded CV, resolve UAE (Gulf Standard Time) dates, calculate
-interview times, preview the candidate email, and generate an **unsent**
-Outlook email draft for a recruiter to review and send manually.
+interview times, preview the candidate email, and generate **unsent**
+Outlook email drafts for a recruiter to review and send manually.
 
 **Nothing is ever sent automatically.** The site has no server and no
-connection to Outlook, Microsoft Graph, or SharePoint — it produces a single
-file you download and finish in Outlook yourself:
+connection to Outlook, Microsoft Graph, or SharePoint — it produces two files
+you download and finish in Outlook yourself:
 
-- **`<request-id>-email-draft.eml`** — opening this file (e.g. double-clicking
-  it, or "Open" from your downloads) creates a fully editable, **unsent**
-  email draft in Outlook, complete with the candidate email as recipient, the
-  formatted HTML body, and attachments. Add interviewer addresses to Cc/To if
-  needed and send it yourself.
+- **`<request-id>-email-draft.eml`** — the candidate-facing interview email.
+  Opening this file (e.g. double-clicking it, or "Open" from your downloads)
+  creates a fully editable, **unsent** email draft in Outlook, complete with
+  the candidate email as recipient, the formatted HTML body, and attachments.
+  Add interviewer addresses to Cc/To if needed and send it yourself.
+- **`<request-id>-candidate-access-draft.eml`** — a short internal email
+  ("Subject: Candidate Access") asking your access/facilities team to grant
+  the candidate access, listing their name, email, mobile number, and the
+  interview date/time. No recipient is filled in — add your team's address
+  before sending. A missing email or phone number shows as an explicit
+  `[... not provided]` placeholder rather than being silently left blank.
 
 ## Why not "real" Outlook/Teams/SharePoint drafts?
 
@@ -31,10 +37,12 @@ A static website has no such backend or credentials, so this implementation:
   the app attaches whatever file exists at that path.
 - **Extracts CV details entirely in your browser** (via pdf.js / mammoth.js,
   vendored in `vendor/` — see `vendor/README.md`) — no CV content is uploaded
-  anywhere. A scanned/image-based PDF (no real text layer, common with
-  visually-designed templates) can't be read this way; the app tells you
-  clearly when that happens and asks you to enter the candidate's name/email
-  manually.
+  anywhere. Name, email, and phone number are pulled with best-effort
+  heuristics (an unlabeled phone number is only trusted if it has a country
+  code or area-code parentheses, to avoid mistaking a date or reference
+  number for one). A scanned/image-based PDF (no real text layer, common
+  with visually-designed templates) can't be read this way; the app tells
+  you clearly when that happens and asks you to enter the details manually.
 
 ## Using it
 
@@ -46,14 +54,14 @@ A static website has no such backend or credentials, so this implementation:
    ```
    then open `http://localhost:8000/`.
 2. Fill in the candidate, job, interviewer, date, time, and interview-type
-   details (optionally upload a CV first to auto-fill the candidate's name
-   and email).
+   details (optionally upload a CV first to auto-fill the candidate's name,
+   email, and mobile number).
 3. Click **Continue to preview** — the assistant resolves the date, computes
    the end time, and shows the full preview plus the candidate-facing email
    exactly as it will be sent.
-4. Click **Yes, create the email draft** to generate the `.eml` file. Download
-   it, open it in Outlook, add interviewer email addresses, double-check
-   everything, and send when ready.
+4. Click **Yes, create the email drafts** to generate both `.eml` files.
+   Download them, open them in Outlook, add the interviewer/team email
+   addresses, double-check everything, and send when ready.
 
 ## Project structure
 

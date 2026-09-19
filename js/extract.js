@@ -6,6 +6,33 @@
 (function (global) {
   const EMAIL_RE = /[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}/;
 
+  // Labeled phone numbers ("Phone: +971 50 123 4567") are trusted outright.
+  // An unlabeled fallback requires a '+' country code or a "(area code)"
+  // group -- a bare run of separated digits is too easily a date, a year
+  // range, or a postal/reference code elsewhere on the CV.
+  const PHONE_LABEL_RE = /(?:phone|mobile|tel(?:ephone)?|cell|contact)\s*(?:no\.?|number)?\s*[:\-]\s*([+(]?[\d][\d\s().-]{6,}\d)/i;
+  const PHONE_FALLBACK_RE = /(\+\d[\d\s().-]{6,}\d)|(\(\d{2,4}\)[\d\s().-]{4,}\d)/;
+
+  function plausiblePhoneDigits(candidate) {
+    const digits = candidate.replace(/\D/g, '');
+    return digits.length >= 7 && digits.length <= 15;
+  }
+
+  function findPhone(text) {
+    const labelMatch = PHONE_LABEL_RE.exec(text || '');
+    if (labelMatch && plausiblePhoneDigits(labelMatch[1])) {
+      return { phone: labelMatch[1].trim(), confidence: 'high' };
+    }
+    const fallbackMatch = PHONE_FALLBACK_RE.exec(text || '');
+    if (fallbackMatch) {
+      const candidate = (fallbackMatch[1] || fallbackMatch[2]).trim();
+      if (plausiblePhoneDigits(candidate)) {
+        return { phone: candidate, confidence: 'low' };
+      }
+    }
+    return { phone: null, confidence: 'low' };
+  }
+
   const NON_NAME_WORDS =
     /curriculum vitae|resume|cv\b|address|phone|mobile|email|profile|summary|objective|experience|education|skills|qualifications|certifications|projects|languages|references|contact|linkedin|github|portfolio|declaration|nationality|marital|gender|birth|street|city|country/i;
 
@@ -46,6 +73,7 @@
   function extractFromText(text, filename) {
     const emailMatch = EMAIL_RE.exec(text || '');
     const email = emailMatch ? emailMatch[0] : null;
+    const phoneResult = findPhone(text);
 
     const lines = (text || '')
       .split(/\r?\n/)
@@ -76,7 +104,9 @@
       name,
       nameConfidence,
       email,
-      emailConfidence: email ? 'high' : 'low'
+      emailConfidence: email ? 'high' : 'low',
+      phone: phoneResult.phone,
+      phoneConfidence: phoneResult.confidence
     };
   }
 
@@ -139,8 +169,9 @@
 
   /**
    * Extracts candidate details from an uploaded CV File object.
-   * Returns { name, nameConfidence, email, emailConfidence, filename,
-   *           reference, status: 'ok'|'uncertain'|'unsupported', warning? }
+   * Returns { name, nameConfidence, email, emailConfidence, phone,
+   *           phoneConfidence, filename, reference,
+   *           status: 'ok'|'uncertain'|'unsupported', warning? }
    */
   async function extractCandidateDetails(file) {
     const reference = `CV-${Date.now().toString(36).toUpperCase()}`;
@@ -189,6 +220,8 @@
       nameConfidence: result.nameConfidence,
       email: result.email,
       emailConfidence: result.emailConfidence,
+      phone: result.phone,
+      phoneConfidence: result.phoneConfidence,
       filename: file.name,
       reference,
       status: unsupported ? 'unsupported' : uncertain ? 'uncertain' : 'ok',
