@@ -1,11 +1,10 @@
 (function () {
-  const { sourcingPrompt, sourcingExcel, extract, templates } = window.PH;
+  const { sourcingPrompt, extract, templates } = window.PH;
   const el = (id) => document.getElementById(id);
 
   const state = {
     excludedOrgs: [...sourcingPrompt.EXCLUDED_ORGS],
-    jdText: '',
-    candidates: null
+    jdText: ''
   };
 
   // ---------- Static filter options ----------
@@ -170,85 +169,5 @@
     a.download = `${slug || 'candidate-sourcing'}-brief.txt`;
     a.click();
     URL.revokeObjectURL(url);
-  });
-
-  // ---------- Step 2: validate & export ----------
-  function renderPreviewTable(candidates) {
-    const table = el('resultsTable');
-    const headRow = sourcingExcel.COLUMNS.map((c) => `<th>${templates.escapeHtml(c.header)}</th>`).join('');
-    const bodyRows = candidates
-      .map((cand) => {
-        const cells = sourcingExcel.COLUMNS.map((c) => {
-          const v = cand[c.key];
-          const content = c.bullets
-            ? (v || []).map((b) => `&bull; ${templates.escapeHtml(b)}`).join('<br>')
-            : c.key === 'matchScore'
-            ? `${templates.escapeHtml(String(v))} (${templates.escapeHtml(cand.confidence)})`
-            : c.key === 'linkedinUrl'
-            ? `<a href="${templates.escapeHtml(v)}" target="_blank" rel="noopener">${templates.escapeHtml(v)}</a>`
-            : templates.escapeHtml(String(v == null ? '' : v));
-          return `<td>${content}</td>`;
-        }).join('');
-        return `<tr>${cells}</tr>`;
-      })
-      .join('');
-    table.innerHTML = `<thead><tr>${headRow}</tr></thead><tbody>${bodyRows}</tbody>`;
-  }
-
-  el('validateBtn').addEventListener('click', () => {
-    const raw = el('resultsInput').value.trim();
-    const errBox = el('validationErrors');
-    const warnBox = el('validationWarnings');
-    const previewWrap = el('resultsPreviewWrap');
-    errBox.classList.add('hidden');
-    warnBox.classList.add('hidden');
-    previewWrap.classList.add('hidden');
-    el('excelSummary').classList.add('hidden');
-    state.candidates = null;
-
-    if (!raw) {
-      errBox.classList.remove('hidden');
-      errBox.textContent = 'Paste the candidate JSON returned by your sourcing agent first.';
-      return;
-    }
-
-    const result = sourcingExcel.validateAndNormalize(raw);
-
-    if (result.warnings.length) {
-      warnBox.classList.remove('hidden');
-      warnBox.innerHTML = `<p><strong>Warnings (export still allowed):</strong></p>${result.warnings.map((w) => `<p>${templates.escapeHtml(w)}</p>`).join('')}`;
-    }
-
-    if (!result.ok) {
-      errBox.classList.remove('hidden');
-      errBox.innerHTML = `<p><strong>Fix the following before exporting:</strong></p>${result.errors.map((e) => `<p>${templates.escapeHtml(e)}</p>`).join('')}`;
-      return;
-    }
-
-    state.candidates = result.candidates;
-    el('resultsCount').textContent = result.candidates.length;
-    renderPreviewTable(result.candidates);
-    previewWrap.classList.remove('hidden');
-  });
-
-  el('downloadExcelBtn').addEventListener('click', () => {
-    if (!state.candidates || !state.candidates.length) return;
-    const form = collectFilterState();
-    const slug = (form.jobTitle || 'candidate').toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)/g, '');
-    sourcingExcel.downloadWorkbook(state.candidates, `${slug || 'candidate'}-shortlist.xlsx`);
-
-    const geoParts = [];
-    if (form.geography.global) geoParts.push('Global');
-    geoParts.push(...form.geography.countries);
-    if (form.geography.custom) geoParts.push(form.geography.custom);
-    const geoLine = geoParts.length ? geoParts.join(', ') : 'United Arab Emirates';
-    const tierNotes = el('tierNotes').value.trim();
-
-    const summaryBox = el('excelSummary');
-    summaryBox.classList.remove('hidden');
-    summaryBox.innerHTML = [
-      `<p>Shortlist Excel generated with <strong>${state.candidates.length}</strong> candidate(s) for <strong>${templates.escapeHtml(form.jobTitle || '(role from briefing)')}</strong> in <strong>${templates.escapeHtml(geoLine)}</strong>.</p>`,
-      tierNotes ? `<p>Search-tier notes: ${templates.escapeHtml(tierNotes)}</p>` : ''
-    ].join('');
   });
 })();

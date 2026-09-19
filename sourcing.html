@@ -11,7 +11,7 @@
 <!-- Bump the ?v= query string on every edit to styles.css or js/*.js so
      browsers/CDNs that cached the old file under the same URL fetch the
      new one instead of serving stale JS after a deploy. -->
-<link rel="stylesheet" href="styles.css?v=8">
+<link rel="stylesheet" href="styles.css?v=9">
 </head>
 <body>
 <header class="app-header">
@@ -107,11 +107,8 @@
         <h2>Step 1 &middot; Generate the sourcing brief</h2>
         <p class="hint">This site has no server and no LinkedIn or AI API access, so it can't run a live LinkedIn
           search itself (see the README). Instead it builds a complete, ready-to-run brief &mdash; with the full
-          sourcing ruleset and every filter above baked in &mdash; for you to hand to an AI assistant that can
-          actually browse the web, such as <strong>Microsoft Copilot Chat</strong> (with web search turned on),
-          Claude, or ChatGPT. Easiest option: paste it straight into the embedded PureHealth Sourcing Agent chat
-          below &mdash; it will generate the shortlist Excel for you automatically. With any other assistant,
-          copy the JSON it returns back into Step 2 below instead.</p>
+          sourcing ruleset and every filter above baked in &mdash; ready to paste straight into the embedded
+          PureHealth Sourcing Agent chat below.</p>
         <div class="actions actions--start">
           <button type="button" id="generateBriefBtn" class="btn-primary">Generate sourcing brief</button>
         </div>
@@ -129,8 +126,7 @@
         <h2>Chat with the PureHealth Sourcing Agent</h2>
         <p class="hint">This is the live PureHealth Copilot Studio agent, embedded directly on this page &mdash;
           paste the brief above into it and it will search, verify, and generate the shortlist Excel itself
-          (via its own tool), handing you back a link right in the chat. Skips Step 2 entirely when used this way.
-          Sign in with your PureHealth Microsoft account if prompted.</p>
+          (via its own tool), handing you back a link right in the chat.</p>
         <div class="copilot-embed">
           <iframe
             src="https://copilotstudio.microsoft.com/environments/Default-66095314-82d7-48e8-be7c-967c923aa1dd/bots/cr30a_candidatesourcingagent_-p674u/webchat?__version__=2&amp;enableFileAttachment=false&amp;cliAgent=true"
@@ -139,53 +135,20 @@
             loading="lazy"></iframe>
         </div>
       </section>
-
-      <section class="card">
-        <h2>Step 2 &middot; Import results &amp; generate the shortlist Excel</h2>
-        <p class="hint">Only needed if you ran the brief in a plain AI assistant (Claude, ChatGPT, or the embedded
-          agent above without it calling its tool) rather than letting the embedded agent above generate the file
-          itself. Paste the JSON array it returns (matching the schema in the brief) here. Every candidate is
-          checked against the shortlist's formatting rules &mdash; exactly 3 bullets per bullet column, a
-          real-looking LinkedIn URL, a 0-100 match score &mdash; before the Excel file is built. Nothing here is
-          invented; this only formats what you paste in.</p>
-        <label>Pasted candidate JSON
-          <textarea id="resultsInput" rows="8" placeholder="[ { &quot;candidateName&quot;: ... }, ... ]"></textarea>
-        </label>
-        <label>Search-tier notes <span class="optional">(optional &mdash; paste the agent's tier/query-count notes)</span>
-          <textarea id="tierNotes" rows="2" placeholder="e.g. Reached target at Tier 2 after 9 queries."></textarea>
-        </label>
-        <div class="actions actions--start">
-          <button type="button" id="validateBtn" class="btn-primary">Validate &amp; preview</button>
-        </div>
-        <div id="validationErrors" class="error-box hidden"></div>
-        <div id="validationWarnings" class="conflict-box hidden"></div>
-        <div id="resultsPreviewWrap" class="hidden">
-          <h3>Preview (<span id="resultsCount"></span> candidates)</h3>
-          <div class="table-scroll">
-            <table class="results-table" id="resultsTable"></table>
-          </div>
-          <div class="actions actions--start">
-            <button type="button" id="downloadExcelBtn" class="btn-primary">Download shortlist (.xlsx)</button>
-          </div>
-          <div id="excelSummary" class="recruiter-note hidden"></div>
-        </div>
-      </section>
     </div>
   </div>
 </main>
 
 <footer class="app-footer">
-  <p>This tool never contacts LinkedIn or any AI service itself, and never invents a candidate or a profile URL.
-    It only prepares the search brief and formats real results you bring back.</p>
+  <p>This tool never contacts LinkedIn itself, and never invents a candidate or a profile URL &mdash; it only
+    prepares the search brief handed to the embedded sourcing agent.</p>
 </footer>
 
 <script src="vendor/pdf.min.js" defer></script>
 <script src="vendor/mammoth.browser.min.js" defer></script>
-<script src="vendor/xlsx.min.js" defer></script>
-<script src="js/extract.js?v=8"></script>
-<script src="js/templates.js?v=8"></script>
-<script src="js/sourcingPrompt.js?v=8"></script>
-<script src="js/sourcingExcel.js?v=8"></script>
-<script src="js/sourcing.js?v=8" defer></script>
+<script src="js/extract.js?v=9"></script>
+<script src="js/templates.js?v=9"></script>
+<script src="js/sourcingPrompt.js?v=9"></script>
+<script src="js/sourcing.js?v=9" defer></script>
 </body>
 </html>
