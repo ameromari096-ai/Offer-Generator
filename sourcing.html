@@ -125,13 +125,15 @@
 
       <section class="card">
         <h2>Chat with the PureHealth Sourcing Agent</h2>
-        <p class="hint">This is the live PureHealth Sourcing Agent (Microsoft 365 Copilot). Microsoft blocks its
-          sign-in page from loading inside an embedded frame, so it opens in its own tab instead of embedding
-          directly on this page &mdash; paste the brief there and it will search, verify, and generate the
-          shortlist Excel itself, handing you back a downloadable file right in the chat.</p>
-        <div class="actions actions--start">
-          <a href="https://m365.cloud.microsoft/chat/?titleId=T_ea85d562-9d19-58f5-280a-734932a38d6c&amp;source=embedded-builder"
-             target="_blank" rel="noopener" class="btn-primary">Open the Sourcing Agent chat</a>
+        <p class="hint">This is the live PureHealth Copilot Studio agent, embedded directly on this page &mdash;
+          paste the brief above into it and it will search, verify, and generate the shortlist Excel itself
+          (via its own tool), handing you back a link right in the chat.</p>
+        <div class="copilot-embed">
+          <iframe
+            src="https://copilotstudio.microsoft.com/environments/Default-66095314-82d7-48e8-be7c-967c923aa1dd/bots/cr30a_candidatesourcingagent_-p674u/webchat?__version__=2&amp;enableFileAttachment=false&amp;cliAgent=true"
+            title="PureHealth Candidate Sourcing Agent chat"
+            frameborder="0"
+            loading="lazy"></iframe>
         </div>
       </section>
     </div>
