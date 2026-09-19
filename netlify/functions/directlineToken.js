@@ -25,15 +25,28 @@ function directLineBase(region) {
     : 'https://directline.botframework.com/v3/directline';
 }
 
+// sourcing.html (GitHub Pages) and this function (Netlify) are different
+// origins, so the browser enforces CORS here — curl doesn't, which is why
+// this wasn't an issue for any earlier server-to-server call in this repo.
+const CORS_HEADERS = {
+  'Access-Control-Allow-Origin': '*',
+  'Access-Control-Allow-Methods': 'POST, OPTIONS',
+  'Access-Control-Allow-Headers': 'Content-Type'
+};
+
 function json(statusCode, payload) {
   return {
     statusCode,
-    headers: { 'Content-Type': 'application/json' },
+    headers: { 'Content-Type': 'application/json', ...CORS_HEADERS },
     body: JSON.stringify(payload)
   };
 }
 
 exports.handler = async function (event) {
+  if (event.httpMethod === 'OPTIONS') {
+    return { statusCode: 204, headers: CORS_HEADERS, body: '' };
+  }
+
   if (event.httpMethod !== 'POST' && event.httpMethod !== 'GET') {
     return json(405, { error: 'Use POST.' });
   }

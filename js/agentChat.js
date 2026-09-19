@@ -83,13 +83,24 @@
     state.connecting = true;
     setStatus('Connecting to the sourcing agent...');
     try {
-      const tokenData = await fetchToken();
+      let tokenData;
+      try {
+        tokenData = await fetchToken();
+      } catch (e) {
+        throw new Error(`getting a token from our own Netlify function failed (${e.message})`);
+      }
       state.token = tokenData.token;
       state.dlBase = directLineBase(tokenData.region);
-      const res = await fetch(`${state.dlBase}/conversations`, {
-        method: 'POST',
-        headers: { Authorization: `Bearer ${state.token}` }
-      });
+
+      let res;
+      try {
+        res = await fetch(`${state.dlBase}/conversations`, {
+          method: 'POST',
+          headers: { Authorization: `Bearer ${state.token}` }
+        });
+      } catch (e) {
+        throw new Error(`reaching Direct Line (${state.dlBase}) failed (${e.message})`);
+      }
       if (!res.ok) throw new Error(`Direct Line rejected the conversation request (HTTP ${res.status}).`);
       const data = await res.json();
       state.conversationId = data.conversationId;
