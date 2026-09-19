@@ -116,7 +116,8 @@ steps instead of pretending to search LinkedIn itself:
    assembled into a complete, ready-to-run brief — including the full
    sourcing ruleset (search-tier escalation ladder, exclusion list, output
    format) — for you to run in an AI assistant that can actually browse the
-   live web (e.g. Claude or ChatGPT with web search/browsing enabled).
+   live web, e.g. **Microsoft Copilot Chat** (with web search turned on),
+   Claude, or ChatGPT.
 2. **Import results and generate the Excel file.** Paste the JSON array the
    agent returns back into the page. Every candidate is validated against
    the shortlist's formatting rules — exactly 3 bullets per bullet column,
@@ -125,3 +126,26 @@ steps instead of pretending to search LinkedIn itself:
    `xlsx` library, no server round-trip) is generated. **No candidate or
    LinkedIn URL is ever fabricated by this tool** — it only formats and
    checks data you bring back from a real search.
+
+### Using it with Microsoft Copilot
+
+No integration work, license, or backend is needed for this — it's a
+copy/paste workflow:
+
+1. Fill in the filter panel and click **Generate sourcing brief**, then
+   **Copy to clipboard**.
+2. Open [Microsoft Copilot Chat](https://copilot.microsoft.com/) (or
+   Copilot in Microsoft 365), make sure **web search** is turned on, and
+   paste the brief in as a chat message.
+3. Copy the JSON array Copilot returns and paste it into the **Import
+   results & generate the shortlist Excel** box on this page, then click
+   **Validate & preview** and **Download shortlist (.xlsx)**.
+
+A tighter, one-click integration (a Copilot Studio agent posting results
+straight to a backend that builds the Excel automatically) is possible but
+needs real infrastructure — a Copilot Studio license (billed per tenant via
+Copilot Credits), a Power Automate Premium license (the HTTP/custom
+connector needed to call a backend is a premium connector, not included in
+standard Microsoft 365 Power Automate), and a small backend service (an
+Azure Function would likely stay within its free monthly grant for this
+volume). None of that is required for the copy/paste workflow above.
