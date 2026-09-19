@@ -98,7 +98,7 @@
    * recruiter fills it in before sending, rather than the row silently
    * looking complete with a blank.
    * state: { candidateName, candidateEmail, candidatePhone, dateLabel,
-   *          startTimeLabel }
+   *          timeLabel }
    */
   function buildCandidateAccessHtml(state) {
     const email = state.candidateEmail || '[email not provided]';
@@ -108,7 +108,7 @@
       escapeHtml(email),
       escapeHtml(phone),
       escapeHtml(state.dateLabel),
-      escapeHtml(state.startTimeLabel)
+      escapeHtml(state.timeLabel)
     ].join(' - ');
 
     return `<div style="font-family: Segoe UI, Arial, sans-serif; font-size: 14px; color: #222222; line-height: 1.5;">

@@ -512,15 +512,16 @@
       messages.push(`Unsent Outlook email draft created with ${attachments.length} attachment(s) (Create Outlook Interview Email Draft).`);
     }
 
-    // Internal "Candidate Access" email: name, email, phone, and interview
-    // date/start time only -- no attachments, no invented recipient (the
-    // internal team's address is always added manually).
+    // Internal "Candidate Access" email: name, email, phone, and the same
+    // interview date/time range as the interview email -- no attachments,
+    // no invented recipient (the internal team's address is always added
+    // manually).
     const accessHtml = templates.buildCandidateAccessHtml({
       candidateName: form.candidateName,
       candidateEmail: form.candidateEmail,
       candidatePhone: form.candidatePhone,
       dateLabel: state.resolvedDateLabel,
-      startTimeLabel: timeUtils.minutesToLabel(state.startMinutes) + ' (UAE Time)'
+      timeLabel: state.timeLabel
     });
     const accessEmlContent = eml.buildEml({
       to: '',

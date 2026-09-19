@@ -107,7 +107,12 @@
         <input type="time" id="startTime">
       </label>
       <label>Duration (minutes) <span class="req">*</span>
-        <input type="number" id="duration" min="1" step="1" placeholder="45">
+        <input type="number" id="duration" min="1" step="1" placeholder="45" list="durationPresets">
+        <datalist id="durationPresets">
+          <option value="30"></option>
+          <option value="45"></option>
+          <option value="60"></option>
+        </datalist>
       </label>
       <label>End time <span class="hint-inline">(optional override)</span>
         <input type="time" id="endTimeOverride">
