@@ -159,7 +159,9 @@ in this repo as a small serverless function (both a Netlify Function,
 free plan needs no credit card and allows commercial use, no local install
 required to deploy it). Both reuse `js/sourcingExcel.js` unchanged. See
 [`docs/copilot-studio-integration.md`](docs/copilot-studio-integration.md)
-for deployment steps for either option, the Power Automate flow, and the
-Copilot Studio wiring. Either way it needs a Power Automate Premium/Process
-license (for the HTTP connector) in addition to Copilot Studio. The
-copy/paste workflow above keeps working independently either way.
+for deployment steps for either backend option and for building the
+**Copilot Studio Workflow** that calls it — note that this must be a
+Workflow built directly inside Copilot Studio's own builder; a classic
+Power Automate cloud flow cannot be used as a Copilot Studio tool at all,
+regardless of trigger. The copy/paste workflow above keeps working
+independently either way.
