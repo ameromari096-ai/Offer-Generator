@@ -3,7 +3,6 @@
   const el = (id) => document.getElementById(id);
 
   const state = {
-    excludedOrgs: [...sourcingPrompt.EXCLUDED_ORGS],
     jdText: ''
   };
 
@@ -18,39 +17,56 @@
     geoBox.appendChild(wrap);
   });
 
-  // ---------- Org exclusion chips ----------
-  function renderOrgChips() {
-    const box = el('orgChips');
-    box.innerHTML = '';
-    state.excludedOrgs.forEach((org, idx) => {
-      const chip = document.createElement('span');
-      chip.className = 'chip';
-      chip.innerHTML = `${templates.escapeHtml(org)} <button type="button" aria-label="Remove ${templates.escapeHtml(org)}">&times;</button>`;
-      chip.querySelector('button').addEventListener('click', () => {
-        state.excludedOrgs.splice(idx, 1);
-        renderOrgChips();
-      });
-      box.appendChild(chip);
-    });
-  }
-  renderOrgChips();
+  // ---------- Reusable chip field: type a value, press Enter (or click Add) to add it as a chip ----------
+  function createChipField(chipsId, inputId, addBtnId, initial) {
+    const values = [...(initial || [])];
+    const box = el(chipsId);
+    const input = el(inputId);
+    const addBtn = el(addBtnId);
 
-  el('orgAddBtn').addEventListener('click', () => {
-    const input = el('orgAddInput');
-    const val = input.value.trim();
-    if (!val) return;
-    if (!state.excludedOrgs.some((o) => o.toLowerCase() === val.toLowerCase())) {
-      state.excludedOrgs.push(val);
-      renderOrgChips();
+    function render() {
+      box.innerHTML = '';
+      values.forEach((val, idx) => {
+        const chip = document.createElement('span');
+        chip.className = 'chip';
+        chip.innerHTML = `${templates.escapeHtml(val)} <button type="button" aria-label="Remove ${templates.escapeHtml(val)}">&times;</button>`;
+        chip.querySelector('button').addEventListener('click', () => {
+          values.splice(idx, 1);
+          render();
+        });
+        box.appendChild(chip);
+      });
     }
-    input.value = '';
-  });
-  el('orgAddInput').addEventListener('keydown', (e) => {
-    if (e.key === 'Enter') {
-      e.preventDefault();
-      el('orgAddBtn').click();
+
+    function addFromInput() {
+      const val = input.value.trim();
+      if (!val) return;
+      if (!values.some((v) => v.toLowerCase() === val.toLowerCase())) {
+        values.push(val);
+        render();
+      }
+      input.value = '';
     }
-  });
+
+    addBtn.addEventListener('click', addFromInput);
+    input.addEventListener('keydown', (e) => {
+      if (e.key === 'Enter') {
+        e.preventDefault();
+        addFromInput();
+      }
+    });
+
+    render();
+    return { getValues: () => values.slice() };
+  }
+
+  const orgField = createChipField('orgChips', 'orgAddInput', 'orgAddBtn', sourcingPrompt.EXCLUDED_ORGS);
+  const jobTitleField = createChipField('jobTitleChips', 'jobTitleInput', 'jobTitleAddBtn');
+  const industryField = createChipField('industryChips', 'industryInput', 'industryAddBtn');
+  const companySizeField = createChipField('companySizeChips', 'companySizeInput', 'companySizeAddBtn');
+  const targetCompanyField = createChipField('targetCompanyChips', 'targetCompanyInput', 'targetCompanyAddBtn');
+  const keywordField = createChipField('keywordChips', 'keywordInput', 'keywordAddBtn');
+  const geoCustomField = createChipField('geoCustomChips', 'geoCustomInput', 'geoCustomAddBtn');
 
   // ---------- JD upload ----------
   const jdDropZone = el('jdDropZone');
@@ -102,39 +118,39 @@
   function collectFilterState() {
     const checkedCountries = Array.from(geoBox.querySelectorAll('input:checked')).map((cb) => cb.value);
     const global = el('geoGlobal').checked;
-    const custom = el('geoCustom').value.trim();
+    const customLocations = geoCustomField.getValues();
     const usedDefault =
       !global &&
-      !custom &&
+      customLocations.length === 0 &&
       checkedCountries.length === sourcingPrompt.DEFAULT_GEOGRAPHY.length &&
       checkedCountries.every((c) => sourcingPrompt.DEFAULT_GEOGRAPHY.includes(c));
 
     return {
-      jobTitle: el('jobTitle').value.trim(),
+      jobTitle: jobTitleField.getValues(),
       yearsExperience: el('yearsExperience').value.trim(),
-      industry: el('industry').value.trim(),
-      companySize: el('companySize').value.trim(),
-      targetCompanies: el('targetCompanies').value.split(/\r?\n/).map((s) => s.trim()).filter(Boolean),
-      keywords: el('keywords').value.split(/\r?\n/).map((s) => s.trim()).filter(Boolean),
+      industry: industryField.getValues(),
+      companySize: companySizeField.getValues(),
+      targetCompanies: targetCompanyField.getValues(),
+      keywords: keywordField.getValues(),
       briefingText: el('briefingText').value,
       jdText: state.jdText,
       geography: {
         countries: checkedCountries,
         global,
-        custom,
+        customLocations,
         exclusions: el('geoExclusions').value.trim(),
         usedDefault
       },
       profileCount: Number(el('profileCount').value) || 15,
       sourcingDirection: document.querySelector('input[name="sourcingDirection"]:checked').value,
-      excludedOrgs: state.excludedOrgs,
+      excludedOrgs: orgField.getValues(),
       hospitalBedPriority: el('hospitalBedPriority').checked
     };
   }
 
   el('generateBriefBtn').addEventListener('click', () => {
     const form = collectFilterState();
-    if (!form.jobTitle && !form.briefingText && !form.jdText) {
+    if (!form.jobTitle.length && !form.briefingText && !form.jdText) {
       alert('Please provide a job title, a free-text briefing, or a job description file before generating a brief.');
       return;
     }
@@ -162,7 +178,7 @@
     const blob = new Blob([el('briefText').value], { type: 'text/plain' });
     const url = URL.createObjectURL(blob);
     const a = document.createElement('a');
-    const slug = (el('jobTitle').value.trim() || 'candidate-sourcing').toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)/g, '');
+    const slug = (jobTitleField.getValues()[0] || 'candidate-sourcing').toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)/g, '');
     a.href = url;
     a.download = `${slug || 'candidate-sourcing'}-brief.txt`;
     a.click();

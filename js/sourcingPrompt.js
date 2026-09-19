@@ -22,11 +22,22 @@
     return items.length ? items.map((s) => `  - ${s}`).join('\n') : '  (none specified)';
   }
 
+  // Like bulletsOrNote, but for a single-value-style field (job title,
+  // industry, company size) that now accepts multiple chips: prints a plain
+  // line for exactly one value, an "ANY of" bullet list for several, or the
+  // given fallback note when empty.
+  function valueOrList(list, label, fallback) {
+    const items = (list || []).filter(Boolean);
+    if (!items.length) return `${label}: ${fallback}`;
+    if (items.length === 1) return `${label}: ${items[0]}`;
+    return `${label} (match ANY of the following):\n${items.map((s) => `  - ${s}`).join('\n')}`;
+  }
+
   /**
    * state: {
-   *   jobTitle, yearsExperience, industry, companySize, targetCompanies: string[],
-   *   keywords: string[], briefingText, jdText,
-   *   geography: { countries: string[], global: boolean, custom: string, exclusions: string, usedDefault: boolean },
+   *   jobTitle: string[], yearsExperience, industry: string[], companySize: string[],
+   *   targetCompanies: string[], keywords: string[], briefingText, jdText,
+   *   geography: { countries: string[], global: boolean, customLocations: string[], exclusions: string, usedDefault: boolean },
    *   profileCount, sourcingDirection: 'external'|'internal', excludedOrgs: string[],
    *   hospitalBedPriority: boolean
    * }
@@ -35,7 +46,7 @@
     const geoParts = [];
     if (state.geography.global) geoParts.push('Global (no geographic restriction)');
     geoParts.push(...state.geography.countries);
-    if (state.geography.custom) geoParts.push(state.geography.custom);
+    geoParts.push(...(state.geography.customLocations || []));
     const geoLine = geoParts.length ? geoParts.join(', ') : 'United Arab Emirates';
     const geoNote = state.geography.usedDefault
       ? ' (not specified by the requester — defaulted to PureHealth\'s primary market; adjust if a different market applies)'
@@ -51,10 +62,10 @@
     return `You are a Candidate Sourcing Agent. Find REAL LinkedIn-based candidates matching the role below and deliver them as a structured shortlist. Do not fabricate a candidate or a LinkedIn URL under any circumstance — only include profiles you actually found via live search.
 
 === ROLE BRIEF ===
-Job title: ${state.jobTitle || '(not specified — infer from the briefing text below)'}
+${valueOrList(state.jobTitle, 'Job title', '(not specified — infer from the briefing text below)')}
 Years of experience: ${state.yearsExperience || '(not specified — infer from the briefing/JD)'}
-Industry: ${state.industry || '(infer from the briefing/JD)'}
-Company size: ${state.companySize || '(no preference specified)'}
+${valueOrList(state.industry, 'Industry', '(infer from the briefing/JD)')}
+${valueOrList(state.companySize, 'Company size', '(no preference specified)')}
 Target companies (prioritize candidates currently or previously at these, if any are listed):
 ${bulletsOrNote(state.targetCompanies)}
 Keywords / required skills:

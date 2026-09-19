@@ -11,7 +11,7 @@
 <!-- Bump the ?v= query string on every edit to styles.css or js/*.js so
      browsers/CDNs that cached the old file under the same URL fetch the
      new one instead of serving stale JS after a deploy. -->
-<link rel="stylesheet" href="styles.css?v=12">
+<link rel="stylesheet" href="styles.css?v=13">
 </head>
 <body>
 <header class="app-header">
@@ -38,36 +38,54 @@
     <aside class="filter-sidebar card">
       <h2>Search filters</h2>
 
-      <label>Job title
-        <input type="text" id="jobTitle" placeholder="e.g. ICU Nurse Manager">
-      </label>
+      <label>Job title <span class="hint-inline">(press Enter to add each)</span></label>
+      <div id="jobTitleChips" class="chip-list"></div>
+      <div class="row-inline">
+        <input type="text" id="jobTitleInput" placeholder="e.g. ICU Nurse Manager">
+        <button type="button" id="jobTitleAddBtn" class="btn-secondary">Add</button>
+      </div>
 
       <label>Years of experience <span class="optional">(optional)</span>
         <input type="text" id="yearsExperience" placeholder="e.g. 5+ years">
       </label>
 
-      <label>Industry
-        <input type="text" id="industry" placeholder="e.g. Private hospitals">
-      </label>
+      <label>Industry <span class="hint-inline">(press Enter to add each)</span></label>
+      <div id="industryChips" class="chip-list"></div>
+      <div class="row-inline">
+        <input type="text" id="industryInput" placeholder="e.g. Private hospitals">
+        <button type="button" id="industryAddBtn" class="btn-secondary">Add</button>
+      </div>
 
-      <label>Company size <span class="optional">(optional)</span>
-        <input type="text" id="companySize" placeholder="e.g. 1,000+ employees">
-      </label>
+      <label>Company size <span class="hint-inline">(optional, press Enter to add each)</span></label>
+      <div id="companySizeChips" class="chip-list"></div>
+      <div class="row-inline">
+        <input type="text" id="companySizeInput" placeholder="e.g. 1,000+ employees">
+        <button type="button" id="companySizeAddBtn" class="btn-secondary">Add</button>
+      </div>
 
-      <label>Target companies <span class="hint-inline">(optional, one per line)</span>
-        <textarea id="targetCompanies" rows="2" placeholder="e.g. Cleveland Clinic Abu Dhabi&#10;Mayo Clinic"></textarea>
-      </label>
+      <label>Target companies <span class="hint-inline">(optional, press Enter to add each)</span></label>
+      <div id="targetCompanyChips" class="chip-list"></div>
+      <div class="row-inline">
+        <input type="text" id="targetCompanyInput" placeholder="e.g. Cleveland Clinic Abu Dhabi">
+        <button type="button" id="targetCompanyAddBtn" class="btn-secondary">Add</button>
+      </div>
 
-      <label>Keywords <span class="hint-inline">(one per line)</span>
-        <textarea id="keywords" rows="3" placeholder="e.g. DHA license&#10;5+ years ICU experience"></textarea>
-      </label>
+      <label>Keywords <span class="hint-inline">(press Enter to add each)</span></label>
+      <div id="keywordChips" class="chip-list"></div>
+      <div class="row-inline">
+        <input type="text" id="keywordInput" placeholder="e.g. DHA license">
+        <button type="button" id="keywordAddBtn" class="btn-secondary">Add</button>
+      </div>
 
       <h2>Location</h2>
       <div id="geoCheckboxes" class="checkbox-list"></div>
       <label class="checkbox-inline"><input type="checkbox" id="geoGlobal"> Global (no restriction)</label>
-      <label>Other / custom location(s)
-        <input type="text" id="geoCustom" placeholder="e.g. Riyadh, Jeddah">
-      </label>
+      <label>Other / custom location(s) <span class="hint-inline">(optional, press Enter to add each)</span></label>
+      <div id="geoCustomChips" class="chip-list"></div>
+      <div class="row-inline">
+        <input type="text" id="geoCustomInput" placeholder="e.g. Riyadh">
+        <button type="button" id="geoCustomAddBtn" class="btn-secondary">Add</button>
+      </div>
       <label>Geographic exclusions <span class="optional">(optional)</span>
         <input type="text" id="geoExclusions" placeholder="e.g. exclude Yemen">
       </label>
@@ -153,9 +171,9 @@
 
 <script src="vendor/pdf.min.js" defer></script>
 <script src="vendor/mammoth.browser.min.js" defer></script>
-<script src="js/extract.js?v=12"></script>
-<script src="js/templates.js?v=12"></script>
-<script src="js/sourcingPrompt.js?v=12"></script>
-<script src="js/sourcing.js?v=12" defer></script>
+<script src="js/extract.js?v=13"></script>
+<script src="js/templates.js?v=13"></script>
+<script src="js/sourcingPrompt.js?v=13"></script>
+<script src="js/sourcing.js?v=13" defer></script>
 </body>
 </html>
