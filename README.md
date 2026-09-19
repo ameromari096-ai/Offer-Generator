@@ -87,10 +87,13 @@ js/sourcing.js                          Candidate Sourcing page state machine / 
 assets/purehealth-logo.png              Brand logo used in the header
 assets/purehealth-introduction-2026.pdf Placeholder attachment — replace with the real file
 vendor/                                 Vendored pdf.js + mammoth.js + xlsx (see vendor/README.md)
-GenerateShortlist/, host.json, package.json
-                                         Azure Function backend for the optional Copilot Studio
+netlify/functions/generateShortlist.js, netlify.toml
+                                         Netlify Function backend for the optional Copilot Studio
                                          integration (see docs/copilot-studio-integration.md) —
                                          not used by the static site itself
+GenerateShortlist/, host.json, package.json
+                                         Azure Function equivalent of the above, for orgs that
+                                         already have an Azure subscription
 ```
 
 No build step or dependencies are required beyond a modern browser; pdf.js,
@@ -150,11 +153,13 @@ copy/paste workflow:
 A tighter integration — a Copilot Studio agent posting its candidate JSON
 straight to a backend that validates it and builds the Excel automatically,
 returning a shareable link instead of requiring copy/paste — is implemented
-in this repo as an Azure Function (`GenerateShortlist/`, reusing
-`js/sourcingExcel.js` unchanged). See
+in this repo as a small serverless function (both a Netlify Function,
+`netlify/functions/generateShortlist.js`, and an Azure Function,
+`GenerateShortlist/`, are provided; pick whichever you can host — Netlify's
+free plan needs no credit card and allows commercial use, no local install
+required to deploy it). Both reuse `js/sourcingExcel.js` unchanged. See
 [`docs/copilot-studio-integration.md`](docs/copilot-studio-integration.md)
-for deployment steps, the Power Automate flow, and the Copilot Studio
-wiring. It needs a Power Automate Premium/Process license (for the HTTP
-connector) in addition to Copilot Studio; Azure Function hosting cost is
-close to $0 at this volume. The copy/paste workflow above keeps working
-independently either way.
+for deployment steps for either option, the Power Automate flow, and the
+Copilot Studio wiring. Either way it needs a Power Automate Premium/Process
+license (for the HTTP connector) in addition to Copilot Studio. The
+copy/paste workflow above keeps working independently either way.
