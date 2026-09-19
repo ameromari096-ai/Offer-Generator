@@ -150,14 +150,12 @@
   });
 
   // ---------- Date resolution ----------
-  el('resolveDateBtn').addEventListener('click', () => resolveDate());
   el('dateInput').addEventListener('change', () => {
     if (el('dateInput').value) {
-      el('datePhrase').value = '';
       const dk = dateUtils.fromDateInputValue(el('dateInput').value);
       const today = dateUtils.uaeTodayDayKey();
       if (dk < today) {
-        showDateAmbiguous(`${dateUtils.formatDayKey(dk)} is in the past. Please choose another date.`, []);
+        showDateAmbiguous(`${dateUtils.formatDayKey(dk)} is in the past. Please choose another date.`);
         state.resolvedDayKey = null;
         el('resolvedDateLabel').textContent = '';
       } else {
@@ -169,48 +167,10 @@
     }
   });
 
-  function showDateAmbiguous(message, options) {
+  function showDateAmbiguous(message) {
     const box = el('dateAmbiguous');
     box.classList.remove('hidden');
     box.innerHTML = `<p class="warn-text">${templates.escapeHtml(message)}</p>`;
-    if (options && options.length) {
-      options.forEach((opt) => {
-        const btn = document.createElement('button');
-        btn.type = 'button';
-        btn.className = 'btn-secondary';
-        btn.textContent = opt.label;
-        btn.addEventListener('click', () => {
-          state.resolvedDayKey = opt.dayKey;
-          state.resolvedDateLabel = opt.label;
-          el('resolvedDateLabel').textContent = opt.label;
-          el('dateInput').value = dateUtils.toDateInputValue(opt.dayKey);
-          box.classList.add('hidden');
-        });
-        box.appendChild(btn);
-      });
-    }
-  }
-
-  function resolveDate() {
-    const phrase = el('datePhrase').value.trim();
-    el('dateAmbiguous').classList.add('hidden');
-    if (!phrase) {
-      state.resolvedDayKey = null;
-      el('resolvedDateLabel').textContent = '';
-      showDateAmbiguous('Please type a date phrase, e.g. "tomorrow" or "next Monday".', []);
-      return;
-    }
-    const result = dateUtils.resolvePhrase(phrase);
-    if (result.status === 'ok') {
-      state.resolvedDayKey = result.dayKey;
-      state.resolvedDateLabel = result.label;
-      el('resolvedDateLabel').textContent = result.label;
-      el('dateInput').value = dateUtils.toDateInputValue(result.dayKey);
-    } else {
-      state.resolvedDayKey = null;
-      el('resolvedDateLabel').textContent = '';
-      showDateAmbiguous(result.message, result.options || []);
-    }
   }
 
   // ---------- Time calculation ----------

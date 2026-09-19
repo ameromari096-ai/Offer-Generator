@@ -101,17 +101,10 @@
     </div>
 
     <h2>Date <span class="req">*</span></h2>
-    <div class="grid-2">
-      <label>Type a date phrase <span class="hint-inline">(e.g. "tomorrow", "next Monday")</span>
-        <input type="text" id="datePhrase" placeholder="next Monday">
-      </label>
-      <label>Or pick an exact date
-        <input type="date" id="dateInput">
-      </label>
-    </div>
-    <p class="hint">Required &mdash; enter either one, then click <strong>Resolve date</strong> before continuing.</p>
+    <label>Interview date
+      <input type="date" id="dateInput">
+    </label>
     <div class="row-inline">
-      <button type="button" id="resolveDateBtn" class="btn-secondary">Resolve date</button>
       <span id="resolvedDateLabel" class="resolved-label"></span>
     </div>
     <div id="dateAmbiguous" class="hidden"></div>
@@ -189,11 +182,11 @@
 
 <script src="vendor/pdf.min.js" defer></script>
 <script src="vendor/mammoth.browser.min.js" defer></script>
-<script src="js/dateUtils.js?v=7"></script>
+<script src="js/dateUtils.js?v=8"></script>
 <script src="js/timeUtils.js?v=7"></script>
 <script src="js/extract.js?v=7"></script>
 <script src="js/templates.js?v=7"></script>
 <script src="js/eml.js?v=7"></script>
-<script src="js/main.js?v=7" defer></script>
+<script src="js/main.js?v=8" defer></script>
 </body>
 </html>
