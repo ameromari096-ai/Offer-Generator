@@ -35,8 +35,6 @@
     (name) => `<li>${offerTemplates.escapeHtml(name)}</li>`
   ).join('');
 
-  el('formsLink').value = offerTemplates.DEFAULT_FORMS_LINK;
-
   // ---------- Contract extraction (file picker + drag-and-drop share this) ----------
   const dropZone = el('contractDropZone');
   const contractInput = el('contractInput');
@@ -63,28 +61,32 @@
     state.contractArrayBuffer = await file.arrayBuffer();
     dropZone.classList.add('has-file');
 
-    const result = await extract.extractContractDetails(file);
-    state.contractExtraction = result;
+    try {
+      const result = await extract.extractContractDetails(file);
+      state.contractExtraction = result;
 
-    // Uploading a contract is a deliberate "use this candidate" action, so
-    // it overwrites whatever is currently in the name/email/job title fields.
-    if (result.name) {
-      el('candidateName').value = result.name;
-    }
-    if (result.email) {
-      el('candidateEmail').value = result.email;
-    }
-    if (result.jobTitle) {
-      el('jobTitle').value = result.jobTitle;
-    }
+      // Uploading a contract is a deliberate "use this candidate" action, so
+      // it overwrites whatever is currently in the name/email/job title fields.
+      if (result.name) {
+        el('candidateName').value = result.name;
+      }
+      if (result.email) {
+        el('candidateEmail').value = result.email;
+      }
+      if (result.jobTitle) {
+        el('jobTitle').value = result.jobTitle;
+      }
 
-    const parts = [`Contract on file: ${offerTemplates.escapeHtml(result.filename)} (ref ${result.reference}).`];
-    if (result.warning) {
-      parts.push(`<span class="warn-text">${offerTemplates.escapeHtml(result.warning)}</span>`);
-    } else {
-      parts.push('Extraction looks confident, but please double-check the fields above.');
+      const parts = [`Contract on file: ${offerTemplates.escapeHtml(result.filename)} (ref ${result.reference}).`];
+      if (result.warning) {
+        parts.push(`<span class="warn-text">${offerTemplates.escapeHtml(result.warning)}</span>`);
+      } else {
+        parts.push('Extraction looks confident, but please double-check the fields above.');
+      }
+      statusEl.innerHTML = parts.join(' ');
+    } catch (err) {
+      statusEl.innerHTML = `<span class="warn-text">"${offerTemplates.escapeHtml(file.name)}" was attached, but extraction failed unexpectedly. Please enter the candidate name, email, and job title manually. (Try a hard refresh if this keeps happening.)</span>`;
     }
-    statusEl.innerHTML = parts.join(' ');
   }
 
   contractInput.addEventListener('change', (e) => handleContractFile(e.target.files[0]));
@@ -125,8 +127,7 @@
     return {
       candidateName: el('candidateName').value.trim(),
       candidateEmail: el('candidateEmail').value.trim(),
-      jobTitle: el('jobTitle').value.trim(),
-      formsLink: el('formsLink').value.trim()
+      jobTitle: el('jobTitle').value.trim()
     };
   }
 
@@ -162,9 +163,6 @@
     const warningsBox = el('previewWarnings');
     warningsBox.innerHTML = '';
     const warnings = [];
-    if (!form.formsLink) {
-      warnings.push('Note: No onboarding documents form link was provided — that line will show an empty link.');
-    }
     warnings.forEach((w) => {
       const p = document.createElement('p');
       p.className = 'warn-text';
@@ -181,7 +179,6 @@
       ['Candidate', form.candidateName],
       ['Candidate email', form.candidateEmail],
       ['Job title', form.jobTitle],
-      ['Onboarding documents form link', form.formsLink || '(not provided)'],
       [
         'Attachments',
         [contractAttachmentName, ...offerTemplates.FIXED_ATTACHMENTS].join('\n')

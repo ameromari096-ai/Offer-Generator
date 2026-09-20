@@ -1,8 +1,7 @@
 // Builds the offer-email subject/body and the fixed onboarding-documents
 // attachment list, mirroring the recruiter's real "PureHealth - Offer
 // Letter" email (name/role are the only things that change email to
-// email; the checklist, forms link, and signature are the same every
-// time, so they're editable defaults rather than hard-coded).
+// email; the checklist and signature are the same every time).
 (function (global) {
   const SUBJECT = 'PureHealth - Offer Letter';
 
@@ -16,7 +15,6 @@
   ];
   const FIXED_ATTACHMENTS_DIR = 'assets/offer-attachments/';
 
-  const DEFAULT_FORMS_LINK = 'https://forms.office.com/r/7BPEMqfh7y';
   const DEFAULT_SENDER = {
     name: 'Amer Omari',
     title: 'Specialist - Talent Acquisition',
@@ -52,12 +50,10 @@
   }
 
   /**
-   * state: { candidateName, jobTitle, formsLink, sender: { name, title,
-   *          phoneOffice, phoneMobile } }
+   * state: { candidateName, jobTitle }
    */
   function buildEmailHtml(state) {
-    const sender = state.sender || DEFAULT_SENDER;
-    const formsLink = state.formsLink || DEFAULT_FORMS_LINK;
+    const sender = DEFAULT_SENDER;
     return `<div style="font-family: Segoe UI, Arial, sans-serif; font-size: 14px; color: #222222; line-height: 1.6;">
   <p>Dear ${escapeHtml(firstName(state.candidateName))},</p>
   <p>Greetings from Purehealth.</p>
@@ -77,7 +73,6 @@
     <li>Passport photograph (white background)</li>
     <li>Employee Record Form &amp; Other forms (attached)</li>
     <li>Emirates ID &amp; Residency Visa (if in UAE)</li>
-    <li>Please login to this link and fill out the form: <a href="${escapeHtml(formsLink)}" target="_blank" rel="noopener">${escapeHtml(formsLink)}</a></li>
   </ol>
   <p>You are requested to kindly revert and confirm your acceptance, also please let us know your tentative date of joining.</p>
   <p>For further queries please feel free to contact us.</p>
@@ -98,7 +93,6 @@
     SUBJECT,
     FIXED_ATTACHMENTS,
     FIXED_ATTACHMENTS_DIR,
-    DEFAULT_FORMS_LINK,
     DEFAULT_SENDER,
     escapeHtml,
     firstName,
