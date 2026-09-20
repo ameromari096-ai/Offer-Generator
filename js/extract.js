@@ -168,13 +168,19 @@
   }
 
   /**
-   * Extracts candidate details from an uploaded CV File object.
+   * Extracts candidate details from an uploaded CV (or other candidate
+   * document, e.g. a signed employment contract) File object.
+   * options: { docLabel, refPrefix } let callers outside the CV flow (e.g.
+   * an employment contract upload) get accurately-worded warnings without
+   * duplicating this function; both default to the original CV wording.
    * Returns { name, nameConfidence, email, emailConfidence, phone,
    *           phoneConfidence, filename, reference,
    *           status: 'ok'|'uncertain'|'unsupported', warning? }
    */
-  async function extractCandidateDetails(file) {
-    const reference = `CV-${Date.now().toString(36).toUpperCase()}`;
+  async function extractCandidateDetails(file, options) {
+    const docLabel = (options && options.docLabel) || 'CV';
+    const refPrefix = (options && options.refPrefix) || 'CV';
+    const reference = `${refPrefix}-${Date.now().toString(36).toUpperCase()}`;
     const ext = (file.name.split('.').pop() || '').toLowerCase();
     let text = '';
     let failureReason = null; // 'unsupported_type' | 'reader_unavailable' | 'parse_error' | 'no_text' | null
@@ -209,10 +215,10 @@
       unsupported || result.nameConfidence === 'low' || result.emailConfidence === 'low';
 
     const failureMessages = {
-      unsupported_type: `"${file.name}" is not a supported CV file type (use PDF, DOCX, or TXT).`,
+      unsupported_type: `"${file.name}" is not a supported ${docLabel} file type (use PDF, DOCX, or TXT).`,
       reader_unavailable: `The reader library for "${file.name}" failed to load — try reloading the page.`,
       parse_error: `"${file.name}" could not be parsed — it may be corrupted or password-protected.`,
-      no_text: `No selectable text was found in "${file.name}" — it may be a scanned or image-based PDF (common with visually-designed CV templates) with no real text layer.`
+      no_text: `No selectable text was found in "${file.name}" — it may be a scanned or image-based PDF with no real text layer.`
     };
 
     return {

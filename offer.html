@@ -1,0 +1,161 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>PureHealth Offer Email Draft</title>
+<link rel="icon" type="image/x-icon" href="assets/favicon.ico">
+<link rel="icon" type="image/png" sizes="32x32" href="assets/favicon-32.png">
+<link rel="icon" type="image/png" sizes="192x192" href="assets/favicon-192.png">
+<link rel="apple-touch-icon" href="assets/apple-touch-icon.png">
+<link rel="stylesheet" href="styles.css?v=14">
+</head>
+<body>
+<header class="app-header">
+  <div class="app-header__inner">
+    <div class="brand">
+      <img src="assets/purehealth-logo.png" alt="PureHealth" class="brand__logo">
+      <div class="brand__divider" aria-hidden="true"></div>
+      <div>
+        <h1>Offer Email Draft</h1>
+        <p class="tagline">Attach the standard onboarding documents &middot; prepare an unsent offer email</p>
+      </div>
+    </div>
+    <div class="policy-badge">Never sends automatically &mdash; every draft is reviewed by you before it goes out</div>
+  </div>
+  <div class="app-header__inner app-header__inner--nav">
+    <nav class="tool-nav">
+      <a href="sourcing.html">Candidate Sourcing</a>
+      <a href="index.html">Interview Scheduling</a>
+      <a href="https://offer-agent.onrender.com/" target="_blank" rel="noopener">Offer Generator</a>
+      <a href="offer.html" class="active">Offer Email Draft</a>
+    </nav>
+  </div>
+</header>
+
+<main class="app-main">
+  <ol class="steps" id="stepIndicator">
+    <li data-step="details" class="active">1. Offer Details</li>
+    <li data-step="preview">2. Preview &amp; Approval</li>
+    <li data-step="done">3. Email Draft</li>
+  </ol>
+
+  <!-- STEP 1: DETAILS -->
+  <section id="detailsSection" class="card">
+    <h2>Employment Contract / Offer Letter</h2>
+    <p class="hint">Upload the candidate's signed employment contract or offer letter. Their name and email are
+      auto-filled from it (only those fields, the filename, and a reference ID &mdash; no other content is read or
+      stored), and the file itself is attached to the draft as the offer letter.</p>
+    <div id="contractDropZone" class="dropzone">
+      <input type="file" id="contractInput" class="dropzone__input" accept=".pdf,.docx,.txt">
+      <label for="contractInput" class="dropzone__label">
+        <svg class="dropzone__icon" width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+          <path d="M12 15V3"></path>
+          <path d="M7 8l5-5 5 5"></path>
+          <path d="M4 15v4a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-4"></path>
+        </svg>
+        <span class="dropzone__text"><strong>Drag and drop</strong> the contract/offer letter here, or <span class="dropzone__browse">browse</span></span>
+        <span class="dropzone__hint">PDF, DOCX, or TXT</span>
+      </label>
+    </div>
+    <div id="contractStatus" class="status-line"></div>
+
+    <h2>Candidate</h2>
+    <div class="grid-3">
+      <label>Candidate full name <span class="req">*</span>
+        <input type="text" id="candidateName" placeholder="e.g. Sara Al Mansoori">
+      </label>
+      <label>Candidate email <span class="req">*</span>
+        <input type="email" id="candidateEmail" placeholder="candidate@example.com">
+      </label>
+      <label>Job title <span class="req">*</span>
+        <input type="text" id="jobTitle" placeholder="e.g. Project Manager - Executive Office">
+      </label>
+    </div>
+
+    <h2>Onboarding documents form link</h2>
+    <label>Link shared with the candidate to submit their joining documents
+      <input type="url" id="formsLink" placeholder="https://forms.office.com/...">
+    </label>
+
+    <h2>Sender signature</h2>
+    <p class="hint">Used for the email's closing signature block. Defaults to your usual signature &mdash; edit if
+      someone else is sending this offer.</p>
+    <div class="grid-3">
+      <label>Name
+        <input type="text" id="senderName">
+      </label>
+      <label>Title
+        <input type="text" id="senderTitle">
+      </label>
+      <label>Office phone
+        <input type="tel" id="senderPhoneOffice">
+      </label>
+      <label>Mobile phone
+        <input type="tel" id="senderPhoneMobile">
+      </label>
+    </div>
+
+    <h2>Always-attached documents</h2>
+    <p class="hint">These standard onboarding documents are attached to every offer email automatically, in
+      addition to the employment contract above.</p>
+    <ul class="checklist" id="fixedAttachmentsList"></ul>
+
+    <div id="formErrors" class="error-box hidden"></div>
+
+    <div class="actions">
+      <button type="button" id="continueBtn" class="btn-primary">Continue to preview</button>
+    </div>
+  </section>
+
+  <!-- STEP 2: PREVIEW -->
+  <section id="previewSection" class="card hidden">
+    <h2>Preview</h2>
+    <div id="previewWarnings"></div>
+    <dl class="preview-list" id="previewList"></dl>
+
+    <h3>Email subject</h3>
+    <div class="mono-box" id="previewSubject"></div>
+
+    <h3>Offer email body</h3>
+    <div class="email-preview-frame" id="previewEmailBody"></div>
+
+    <p class="approval-question">Create the unsent Outlook email draft with these details?</p>
+    <div class="actions">
+      <button type="button" id="backToEditBtn" class="btn-secondary">Go back and edit</button>
+      <button type="button" id="approveBtn" class="btn-primary">Yes, create the email draft</button>
+    </div>
+  </section>
+
+  <!-- STEP 3: DONE -->
+  <section id="doneSection" class="card hidden">
+    <h2>Email draft ready for your review</h2>
+    <div id="doneMessages"></div>
+    <div id="recruiterReminder" class="recruiter-note"></div>
+
+    <div class="download-row">
+      <a id="downloadEml" class="btn-primary hidden" download>Download email draft (.eml)</a>
+    </div>
+
+    <h3>Final verification</h3>
+    <ul class="checklist" id="verificationChecklist"></ul>
+
+    <div class="actions">
+      <button type="button" id="startOverBtn" class="btn-secondary">Start a new request</button>
+    </div>
+  </section>
+</main>
+
+<footer class="app-footer">
+  <p>This assistant never sends email automatically. Review the draft, confirm the attachments, and send manually
+    from Outlook.</p>
+</footer>
+
+<script src="vendor/pdf.min.js" defer></script>
+<script src="vendor/mammoth.browser.min.js" defer></script>
+<script src="js/extract.js?v=7"></script>
+<script src="js/offerTemplates.js?v=1"></script>
+<script src="js/eml.js?v=9"></script>
+<script src="js/offer.js?v=1" defer></script>
+</body>
+</html>
