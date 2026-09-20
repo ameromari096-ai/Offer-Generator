@@ -43,9 +43,9 @@
   <!-- STEP 1: DETAILS -->
   <section id="detailsSection" class="card">
     <h2>Employment Contract / Offer Letter</h2>
-    <p class="hint">Upload the candidate's signed employment contract or offer letter. Their name and email are
-      auto-filled from it (only those fields, the filename, and a reference ID &mdash; no other content is read or
-      stored), and the file itself is attached to the draft as the offer letter.</p>
+    <p class="hint">Upload the candidate's signed employment contract or offer letter. Their name, email, and job
+      title are auto-filled from it (only those fields, the filename, and a reference ID &mdash; no other content is
+      read or stored), and the file itself is attached to the draft as the offer letter.</p>
     <div id="contractDropZone" class="dropzone">
       <input type="file" id="contractInput" class="dropzone__input" accept=".pdf,.docx,.txt">
       <label for="contractInput" class="dropzone__label">
@@ -77,24 +77,6 @@
     <label>Link shared with the candidate to submit their joining documents
       <input type="url" id="formsLink" placeholder="https://forms.office.com/...">
     </label>
-
-    <h2>Sender signature</h2>
-    <p class="hint">Used for the email's closing signature block. Defaults to your usual signature &mdash; edit if
-      someone else is sending this offer.</p>
-    <div class="grid-3">
-      <label>Name
-        <input type="text" id="senderName">
-      </label>
-      <label>Title
-        <input type="text" id="senderTitle">
-      </label>
-      <label>Office phone
-        <input type="tel" id="senderPhoneOffice">
-      </label>
-      <label>Mobile phone
-        <input type="tel" id="senderPhoneMobile">
-      </label>
-    </div>
 
     <h2>Always-attached documents</h2>
     <p class="hint">These standard onboarding documents are attached to every offer email automatically, in

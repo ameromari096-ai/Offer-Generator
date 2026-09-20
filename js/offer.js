@@ -35,11 +35,6 @@
     (name) => `<li>${offerTemplates.escapeHtml(name)}</li>`
   ).join('');
 
-  // ---------- Sender defaults ----------
-  el('senderName').value = offerTemplates.DEFAULT_SENDER.name;
-  el('senderTitle').value = offerTemplates.DEFAULT_SENDER.title;
-  el('senderPhoneOffice').value = offerTemplates.DEFAULT_SENDER.phoneOffice;
-  el('senderPhoneMobile').value = offerTemplates.DEFAULT_SENDER.phoneMobile;
   el('formsLink').value = offerTemplates.DEFAULT_FORMS_LINK;
 
   // ---------- Contract extraction (file picker + drag-and-drop share this) ----------
@@ -68,19 +63,19 @@
     state.contractArrayBuffer = await file.arrayBuffer();
     dropZone.classList.add('has-file');
 
-    const result = await extract.extractCandidateDetails(file, {
-      docLabel: 'employment contract',
-      refPrefix: 'CONTRACT'
-    });
+    const result = await extract.extractContractDetails(file);
     state.contractExtraction = result;
 
     // Uploading a contract is a deliberate "use this candidate" action, so
-    // it overwrites whatever is currently in the name/email fields.
+    // it overwrites whatever is currently in the name/email/job title fields.
     if (result.name) {
       el('candidateName').value = result.name;
     }
     if (result.email) {
       el('candidateEmail').value = result.email;
+    }
+    if (result.jobTitle) {
+      el('jobTitle').value = result.jobTitle;
     }
 
     const parts = [`Contract on file: ${offerTemplates.escapeHtml(result.filename)} (ref ${result.reference}).`];
@@ -131,13 +126,7 @@
       candidateName: el('candidateName').value.trim(),
       candidateEmail: el('candidateEmail').value.trim(),
       jobTitle: el('jobTitle').value.trim(),
-      formsLink: el('formsLink').value.trim(),
-      sender: {
-        name: el('senderName').value.trim(),
-        title: el('senderTitle').value.trim(),
-        phoneOffice: el('senderPhoneOffice').value.trim(),
-        phoneMobile: el('senderPhoneMobile').value.trim()
-      }
+      formsLink: el('formsLink').value.trim()
     };
   }
 
@@ -193,7 +182,6 @@
       ['Candidate email', form.candidateEmail],
       ['Job title', form.jobTitle],
       ['Onboarding documents form link', form.formsLink || '(not provided)'],
-      ['Sender', `${form.sender.name}, ${form.sender.title}`],
       [
         'Attachments',
         [contractAttachmentName, ...offerTemplates.FIXED_ATTACHMENTS].join('\n')

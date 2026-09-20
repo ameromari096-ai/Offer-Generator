@@ -168,19 +168,13 @@
   }
 
   /**
-   * Extracts candidate details from an uploaded CV (or other candidate
-   * document, e.g. a signed employment contract) File object.
-   * options: { docLabel, refPrefix } let callers outside the CV flow (e.g.
-   * an employment contract upload) get accurately-worded warnings without
-   * duplicating this function; both default to the original CV wording.
+   * Extracts candidate details from an uploaded CV File object.
    * Returns { name, nameConfidence, email, emailConfidence, phone,
    *           phoneConfidence, filename, reference,
    *           status: 'ok'|'uncertain'|'unsupported', warning? }
    */
-  async function extractCandidateDetails(file, options) {
-    const docLabel = (options && options.docLabel) || 'CV';
-    const refPrefix = (options && options.refPrefix) || 'CV';
-    const reference = `${refPrefix}-${Date.now().toString(36).toUpperCase()}`;
+  async function extractCandidateDetails(file) {
+    const reference = `CV-${Date.now().toString(36).toUpperCase()}`;
     const ext = (file.name.split('.').pop() || '').toLowerCase();
     let text = '';
     let failureReason = null; // 'unsupported_type' | 'reader_unavailable' | 'parse_error' | 'no_text' | null
@@ -215,10 +209,10 @@
       unsupported || result.nameConfidence === 'low' || result.emailConfidence === 'low';
 
     const failureMessages = {
-      unsupported_type: `"${file.name}" is not a supported ${docLabel} file type (use PDF, DOCX, or TXT).`,
+      unsupported_type: `"${file.name}" is not a supported CV file type (use PDF, DOCX, or TXT).`,
       reader_unavailable: `The reader library for "${file.name}" failed to load — try reloading the page.`,
       parse_error: `"${file.name}" could not be parsed — it may be corrupted or password-protected.`,
-      no_text: `No selectable text was found in "${file.name}" — it may be a scanned or image-based PDF with no real text layer.`
+      no_text: `No selectable text was found in "${file.name}" — it may be a scanned or image-based PDF (common with visually-designed CV templates) with no real text layer.`
     };
 
     return {
@@ -283,7 +277,139 @@
     }
   }
 
-  const api = { extractCandidateDetails, extractFromText, reconstructLines, extractRawText };
+  // ---------- Employment contract / offer letter extraction ----------
+  // PureHealth's contract template repeats the same company letterhead
+  // ("Pure Health Medical Supplies L.L.C.", the office address, "Public
+  // Document", the document titles) on every page above the candidate's
+  // own name, which the generic CV line-heuristic below would otherwise
+  // happily match as a name. Screen those lines out, and prefer patterns
+  // specific to this contract's wording over the generic fallback.
+  const LETTERHEAD_RE =
+    /l\.?l\.?c\.?|pure\s*health|public document|offer letter|contract of employment|p\.o\.?\s*box|vision tower|business bay/i;
+
+  function findQuotedEmployeeName(flatText) {
+    const m = /\band\s+[“"]([A-Z][a-zA-Z'.-]+(?:\s+[A-Z][a-zA-Z'.-]+){0,3})[”"]\s+of\s+[A-Za-z]+\s+nationality/i.exec(
+      flatText
+    );
+    return m ? m[1].trim() : null;
+  }
+
+  function findGreetingFirstName(text) {
+    const m = /\bDear\s+([A-Z][a-zA-Z'.-]+)\s*,/.exec(text || '');
+    return m ? m[1].trim() : null;
+  }
+
+  function findJobTitleLabel(lines) {
+    for (const line of lines) {
+      const m = /^JOB\s*TITLE\s+(.+)$/i.exec(line.trim());
+      if (m) return m[1].trim();
+    }
+    return null;
+  }
+
+  function findJobTitleFromOfferPhrase(flatText) {
+    const m = /position of\s*[“"]([^”"]+)[”"]/i.exec(flatText);
+    return m ? m[1].trim() : null;
+  }
+
+  function extractFromContractText(text, filename) {
+    const emailMatch = EMAIL_RE.exec(text || '');
+    const email = emailMatch ? emailMatch[0] : null;
+
+    const allLines = (text || '')
+      .split(/\r?\n/)
+      .map((l) => l.trim())
+      .filter(Boolean);
+    const headerLines = allLines.slice(0, 25);
+    // Patterns can be split across the reconstructed lines' newlines (e.g. a
+    // quoted name wrapping mid-sentence), so also search a whitespace-flattened
+    // copy of the text for those.
+    const flatText = (text || '').replace(/\s+/g, ' ');
+
+    let name = findLabeledName(headerLines) || findQuotedEmployeeName(flatText);
+    let nameConfidence = name ? 'high' : 'low';
+    if (!name) {
+      const greetingFirst = findGreetingFirstName(text);
+      if (greetingFirst) {
+        name = greetingFirst;
+        nameConfidence = 'low';
+      }
+    }
+    if (!name) {
+      for (const line of headerLines) {
+        if (LETTERHEAD_RE.test(line)) continue;
+        if (looksLikeName(line)) {
+          name = line;
+          nameConfidence = 'high';
+          break;
+        }
+      }
+    }
+    if (!name) {
+      const guess = guessNameFromFilename(filename);
+      if (guess) {
+        name = guess;
+        nameConfidence = 'low';
+      }
+    }
+
+    const jobTitle = findJobTitleLabel(allLines) || findJobTitleFromOfferPhrase(flatText);
+
+    return {
+      name,
+      nameConfidence,
+      email,
+      emailConfidence: email ? 'high' : 'low',
+      jobTitle,
+      jobTitleConfidence: jobTitle ? 'high' : 'low'
+    };
+  }
+
+  /**
+   * Extracts candidate name, email, and job title from an uploaded
+   * employment contract / offer letter File object. Reads the whole
+   * document (a contract's JOB TITLE row is typically on page 2, past the
+   * 3-page cap extractCandidateDetails uses for CV headers).
+   * Returns { name, nameConfidence, email, emailConfidence, jobTitle,
+   *           jobTitleConfidence, filename, reference,
+   *           status: 'ok'|'uncertain'|'unsupported', warning? }
+   */
+  async function extractContractDetails(file) {
+    const reference = `CONTRACT-${Date.now().toString(36).toUpperCase()}`;
+    const raw = await extractRawText(file);
+    const result = extractFromContractText(raw.text, file.name);
+    const unsupported = !raw.text.trim() && Boolean(raw.warning);
+    const uncertain =
+      unsupported ||
+      result.nameConfidence === 'low' ||
+      result.emailConfidence === 'low' ||
+      result.jobTitleConfidence === 'low';
+
+    return {
+      name: result.name,
+      nameConfidence: result.nameConfidence,
+      email: result.email,
+      emailConfidence: result.emailConfidence,
+      jobTitle: result.jobTitle,
+      jobTitleConfidence: result.jobTitleConfidence,
+      filename: file.name,
+      reference,
+      status: unsupported ? 'unsupported' : uncertain ? 'uncertain' : 'ok',
+      warning: unsupported
+        ? `${raw.warning} Please enter the candidate name, email, and job title manually.`
+        : uncertain
+        ? 'Some extracted details are unconfirmed. Please review and correct the candidate name/email/job title below.'
+        : null
+    };
+  }
+
+  const api = {
+    extractCandidateDetails,
+    extractFromText,
+    reconstructLines,
+    extractRawText,
+    extractContractDetails
+  };
   const root = global.PH || (global.PH = {});
   root.extract = api;
   if (typeof module !== 'undefined' && module.exports) {
