@@ -15,6 +15,8 @@
   ];
   const FIXED_ATTACHMENTS_DIR = 'assets/offer-attachments/';
 
+  const DOCUMENTS_FORM_LINK = 'https://forms.office.com/r/7BPEMqfh7y';
+
   const DEFAULT_SENDER = {
     name: 'Amer Omari',
     title: 'Specialist - Talent Acquisition',
@@ -73,6 +75,7 @@
     <li>Passport photograph (white background)</li>
     <li>Employee Record Form &amp; Other forms (attached)</li>
     <li>Emirates ID &amp; Residency Visa (if in UAE)</li>
+    <li>Please login to this link and fill out the form: <a href="${DOCUMENTS_FORM_LINK}" target="_blank" rel="noopener">${DOCUMENTS_FORM_LINK}</a></li>
   </ol>
   <p>You are requested to kindly revert and confirm your acceptance, also please let us know your tentative date of joining.</p>
   <p>For further queries please feel free to contact us.</p>
