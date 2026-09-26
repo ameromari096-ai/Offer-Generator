@@ -11,6 +11,9 @@ A self-contained website with two tools:
   filter panel that builds a ready-to-run sourcing brief and turns a
   sourcing agent's results into a real `.xlsx` shortlist. See
   [Candidate Sourcing Agent](#candidate-sourcing-agent) below.
+- **TA Policy Assistant** (`policy.html`) — embeds the Talent Acquisition
+  policy Copilot Studio agent's web chat, with a link to open it in its own
+  tab if the embedded frame doesn't load.
 
 **Nothing is ever sent automatically.** The site has no server and no
 connection to Outlook, Microsoft Graph, or SharePoint — it produces two files
