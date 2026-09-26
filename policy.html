@@ -8,7 +8,7 @@
 <link rel="icon" type="image/png" sizes="32x32" href="assets/favicon-32.png">
 <link rel="icon" type="image/png" sizes="192x192" href="assets/favicon-192.png">
 <link rel="apple-touch-icon" href="assets/apple-touch-icon.png">
-<link rel="stylesheet" href="styles.css?v=15">
+<link rel="stylesheet" href="styles.css?v=16">
 </head>
 <body>
 <header class="app-header">
@@ -44,9 +44,13 @@
     </div>
   </section>
 
-  <section class="card policy-chat">
-    <iframe class="policy-chat__frame" title="Talent Acquisition Policy Agent chat"
-      src="https://copilotstudio.microsoft.com/environments/Default-66095314-82d7-48e8-be7c-967c923aa1dd/bots/cr30a_ph-talentacquisitionpolicy_I0Z6tQ/webchat?__version__=2&amp;enableFileAttachment=false&amp;cliAgent=true"></iframe>
+  <section class="card policy-chat" id="policyChat">
+    <div id="chatStatus" class="policy-chat__status">Connecting to the agent&hellip;</div>
+    <div id="webchat" class="policy-chat__webchat" role="main"></div>
+    <div id="thinkingIndicator" class="thinking hidden" role="status" aria-live="polite">
+      <span class="thinking__dots" aria-hidden="true"><span></span><span></span><span></span></span>
+      <span id="thinkingText">The agent is thinking</span>
+    </div>
   </section>
 </main>
 
@@ -54,5 +58,7 @@
   <p>Answers come from the Talent Acquisition policy agent. Confirm anything critical against the official policy
     document before acting on it.</p>
 </footer>
+<script src="https://cdn.botframework.com/botframework-webchat/latest/webchat.js" defer></script>
+<script src="js/policyChat.js?v=1" defer></script>
 </body>
 </html>
