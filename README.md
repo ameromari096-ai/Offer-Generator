@@ -11,13 +11,11 @@ A self-contained website with two tools:
   filter panel that builds a ready-to-run sourcing brief and turns a
   sourcing agent's results into a real `.xlsx` shortlist. See
   [Candidate Sourcing Agent](#candidate-sourcing-agent) below.
-- **TA Policy Assistant** (`policy.html`) — chat with the Talent
-  Acquisition policy Copilot Studio agent. `js/policyChat.js` renders it with
-  Bot Framework Web Chat (via the agent's Direct Line token endpoint) so the
-  page can show an "agent is thinking" indicator between a question and its
-  answer; if Web Chat or the token endpoint can't be reached (e.g. the agent
-  is switched to require sign-in), it falls back to Copilot Studio's stock
-  iframe, which has no such indicator.
+- **TA Policy Assistant** (`policy.html`) — embeds the Talent Acquisition
+  policy Copilot Studio agent's web chat, with a link to open it in its own
+  tab if the embedded frame doesn't load. The stock iframe shows nothing while
+  the agent is working, so the page tells users to allow up to a minute and
+  points them to the new-tab link if no answer arrives.
 
 **Nothing is ever sent automatically.** The site has no server and no
 connection to Outlook, Microsoft Graph, or SharePoint — it produces two files
@@ -104,7 +102,6 @@ js/sourcingPrompt.js                    Builds the sourcing brief text from the 
 js/sourcingExcel.js                     Validates candidate JSON and builds the .xlsx shortlist — used only
                                          by the legacy Copilot Studio backend functions, not sourcing.html
 js/sourcing.js                          Candidate Sourcing page state machine / UI wiring
-js/policyChat.js                        TA Policy Assistant chat + "thinking" indicator
 assets/purehealth-logo.png              Brand logo used in the header
 assets/purehealth-introduction-2026.pdf Placeholder attachment — replace with the real file
 vendor/                                 Vendored pdf.js + mammoth.js + xlsx (see vendor/README.md)
