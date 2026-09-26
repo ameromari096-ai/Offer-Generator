@@ -64,11 +64,13 @@ def test_extract_parses_real_documents_and_prefills_form(client):
     # Business Unit resolved and auto-selected.
     assert 'value="PureHealth" selected' in html
 
-    # Department: "Division" (Commercial Office) vs "Department" (Commercial)
-    # disagree -> a genuine conflict, left blank rather than guessed.
+    # Department: the hiring approval lists both "Division" (Commercial
+    # Office) and "Department" (Commercial) as distinct fields - the
+    # offer's department must take the "Department" value specifically,
+    # not treat the difference from "Division" as a conflict.
     department_match = re.search(r'name="department" id="department" value="([^"]*)"', html)
-    assert department_match.group(1) == ""
-    assert "Conflict on" in html
+    assert department_match.group(1) == "Commercial"
+    assert "Conflict on" not in html
 
     # Nationality is never stated anywhere in either document -> must stay blank, never guessed.
     assert 'name="nationality" id="nationality" value=""' in html

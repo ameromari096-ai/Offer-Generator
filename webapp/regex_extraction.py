@@ -21,7 +21,7 @@ from __future__ import annotations
 import re
 from typing import List, Optional, Tuple
 
-from webapp.extraction_schema import ConflictOption, ExtractedField, ExtractionResult, FieldConflict
+from webapp.extraction_schema import ExtractedField, ExtractionResult, FieldConflict
 
 _WS = re.compile(r"[ \t ]+")
 
@@ -194,21 +194,15 @@ def extract_offer_fields_regex(
     line_manager = pairs.get("line_manager")
     business_unit_raw = pairs.get("business_unit_raw")
 
+    # "Division" and "Department" are distinct fields in the hiring
+    # approval template (Division is the broader org unit, Department the
+    # specific one) - they routinely differ and that is not a conflict.
+    # The offer's department field must equal the hiring approval's own
+    # "Department" value exactly; "Division" is only a fallback for the
+    # rare hiring approval that omits "Department" entirely.
     department_val = pairs.get("department")
     division_val = pairs.get("division")
-    if department_val and division_val and _norm(department_val) != _norm(division_val):
-        conflicts.append(
-            FieldConflict(
-                field="department",
-                options=[
-                    ConflictOption(value=division_val, source="hiring_approval (Division)"),
-                    ConflictOption(value=department_val, source="hiring_approval (Department)"),
-                ],
-            )
-        )
-        department = None
-    else:
-        department = department_val or division_val
+    department = department_val or division_val
 
     total_salary_raw = pairs.get("total_salary")
     total_salary = _clean_money(total_salary_raw) if total_salary_raw else None

@@ -70,10 +70,18 @@ email-thread text):
 | Candidate Recommended | `candidate full name` |
 | Job Title | `job title` |
 | Reporting Line | `line manager` |
-| Division or Department | `department` |
+| Department (fall back to Division only if Department is absent) | `department` |
 | Notice Period (under **Contract Term Details**) | `notice period` |
 | Proposed Salary | `Total Salary` (monthly) |
 | Business Unit | template selection |
+
+**Department vs. Division**: hiring approvals commonly list both, as
+distinct fields (Division is the broader org unit, Department the
+specific one) — they routinely differ and that is expected, **not** a
+conflict. Always take the value labeled exactly **Department**; use
+Division only when the hiring approval has no separate Department line at
+all. Never surface a Division/Department mismatch to the user as
+something requiring a choice.
 
 The hiring approval controls Business Unit, job title, line manager,
 department, salary, and notice period unless the user explicitly
