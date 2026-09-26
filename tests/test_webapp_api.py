@@ -52,6 +52,7 @@ def app_with_restored_config(monkeypatch):
 def _valid_fields():
     return {
         "fields": {
+            "candidate_title": "Mr.",
             "candidate_full_name": "Test API User",
             "candidate_phone": "+971500000000",
             "candidate_email": "test@example.com",

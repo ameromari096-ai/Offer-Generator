@@ -18,6 +18,7 @@ from offer_agent.models import FieldValue, ResolvedOffer
 from webapp.extraction_schema import ExtractionResult
 
 MANDATORY_FIELDS = [
+    ("candidate_title", "candidate title", "Title (Mr. / Ms.)"),
     ("candidate_full_name", "candidate full name", "Candidate full name"),
     ("candidate_phone", "candidate phone number", "Candidate phone number"),
     ("candidate_email", "candidate email address", "Candidate email address"),
@@ -64,6 +65,10 @@ def derive_first_name(full_name: str) -> str:
 def map_extraction_to_prefill(result: ExtractionResult):
     """Turn an ExtractionResult into (prefill dict, business_unit_display, banner_notes)."""
     prefill = {
+        # Never extracted/inferred (not from a name, not from nationality) -
+        # always left blank for the user to pick, per the "never infer a
+        # personal title" rule.
+        "candidate_title": "",
         "candidate_full_name": result.candidate_full_name.value or "",
         "candidate_first_name": (result.candidate_first_name.value if result.candidate_first_name else "") or "",
         "candidate_phone": result.candidate_phone_number.value or "",

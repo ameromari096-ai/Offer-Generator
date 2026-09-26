@@ -96,6 +96,7 @@ def build_preview(resolved: ResolvedOffer, validation: ValidationResult) -> str:
 
     sections = [
         "Candidate:",
+        f"  Title: {_val(resolved, 'candidate title', conflicted_fields)}",
         f"  Full name: {_val(resolved, 'candidate full name', conflicted_fields)}",
         f"  First name: {_val(resolved, 'candidate first name', conflicted_fields)}",
         f"  Phone: {_val(resolved, 'candidate phone number', conflicted_fields)}",

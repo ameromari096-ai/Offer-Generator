@@ -78,6 +78,11 @@ def _inject_storage_label():
     return {"storage_label": app.config.get("STORAGE_LABEL", "local")}
 
 
+@app.context_processor
+def _inject_title_options():
+    return {"title_options": fields_module.TITLE_OPTIONS}
+
+
 # The HTML pages below (/, /extract, /preview, /approve) have no login of
 # their own - fine for the desktop app (127.0.0.1 only) and for local dev,
 # but not for a deployment meant to sit behind the Power Apps API. Setting

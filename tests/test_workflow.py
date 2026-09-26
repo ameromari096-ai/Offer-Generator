@@ -1,6 +1,8 @@
+import io
 from pathlib import Path
 
 import pytest
+from docx import Document
 
 from offer_agent.models import ConflictOption, FieldConflict, FieldValue, ResolvedOffer
 from offer_agent.reference import ReferenceStore
@@ -21,6 +23,7 @@ def _complete_offer(offer_id="offer-1", business_unit="PureHealth", total_salary
         offer_id=offer_id,
         business_unit_raw=business_unit,
         fields={
+            "candidate title": FieldValue("Ms.", "user"),
             "candidate full name": FieldValue("Jane Marie Doe", "cv"),
             "candidate phone number": FieldValue("+971500000000", "cv"),
             "candidate email address": FieldValue("jane@example.com", "cv"),
@@ -66,6 +69,18 @@ def test_finalize_offer_end_to_end(tmp_path):
     assert "Status: Employment contract created" in text
     assert outcome.reference in text
     assert "VALUE[" not in text
+
+    # The template already spells out "AED {{placeholder}}" as literal
+    # text, and separately has a literal "Mr. " that's now the
+    # {{candidate title}} placeholder - confirm neither regressed into
+    # "AED AED ..." nor left the title unfilled.
+    docx_text = "\n".join(p.text for p in Document(io.BytesIO(outcome.docx_content_bytes)).paragraphs)
+    for table in Document(io.BytesIO(outcome.docx_content_bytes)).tables:
+        for row in table.rows:
+            for cell in row.cells:
+                docx_text += "\n" + cell.text
+    assert "AED AED" not in docx_text
+    assert "Ms. Jane Marie Doe" in docx_text
 
 
 @pytest.mark.slow

@@ -144,12 +144,28 @@ def compute_salary(
     )
 
 
+def _format_number(value: object) -> str:
+    amount = to_decimal(value)
+    quantized = amount.quantize(Decimal("1"), rounding=ROUND_HALF_UP)
+    return f"{quantized:,}"
+
+
 def format_aed(value: object) -> str:
-    """Format a numeric amount as ``AED #,##0`` for display in the contract.
+    """Format a numeric amount as ``AED #,##0`` for display in the preview
+    and audit record.
 
     This affects display only — it never mutates the stored/approved
     figure used in calculations or the audit record.
     """
-    amount = to_decimal(value)
-    quantized = amount.quantize(Decimal("1"), rounding=ROUND_HALF_UP)
-    return f"AED {quantized:,}"
+    return f"AED {_format_number(value)}"
+
+
+def format_amount(value: object) -> str:
+    """Format a numeric amount as ``#,##0`` with no currency prefix.
+
+    Use this (not ``format_aed``) for values filled into the Word
+    templates' salary placeholders — the templates already spell out
+    "AED {{placeholder}}" as literal text, so prefixing the filled value
+    too would print "AED AED #,##0".
+    """
+    return _format_number(value)

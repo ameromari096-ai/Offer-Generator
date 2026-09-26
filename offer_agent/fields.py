@@ -17,6 +17,7 @@ from typing import Optional
 # permitted to populate — nothing more, nothing less.
 PLACEHOLDERS: tuple[str, ...] = (
     "Ref",
+    "candidate title",
     "candidate full name",
     "candidate phone number",
     "candidate email address",
@@ -103,6 +104,7 @@ def resolve_template(business_unit_raw: Optional[str]) -> Optional[TemplateDefin
 # gets written into the documents.
 PLACEHOLDER_LABELS: dict[str, str] = {
     "Ref": "Reference",
+    "candidate title": "Title",
     "candidate full name": "Full name",
     "candidate phone number": "Phone",
     "candidate email address": "Email",
@@ -124,6 +126,12 @@ PLACEHOLDER_LABELS: dict[str, str] = {
 
 def label_for(placeholder: str) -> str:
     return PLACEHOLDER_LABELS.get(placeholder, placeholder)
+
+
+# The candidate title is a constrained choice, never free text and never
+# inferred (not from nationality, name, or any other signal) - the user
+# (or an explicit, literal match in a source document) must select one.
+TITLE_OPTIONS: tuple[str, ...] = ("Mr.", "Ms.")
 
 
 def get_template_by_key(key: str) -> TemplateDefinition:

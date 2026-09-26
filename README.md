@@ -385,6 +385,7 @@ All under `/api`, all requiring the `X-API-Key` header:
   "business_unit": "PureHealth",
   "requested_by": "hr.person@purehealth.ae",
   "fields": {
+    "candidate_title": "Ms.",
     "candidate_full_name": "Jane Doe",
     "candidate_phone": "+971500000000",
     "candidate_email": "jane@example.com",
@@ -468,6 +469,7 @@ resolved = ResolvedOffer(
     offer_id="offer-2026-09-13-jane-doe",
     business_unit_raw="PureHealth",
     fields={
+        "candidate title": FieldValue("Ms.", "user"),
         "candidate full name": FieldValue("Jane Marie Doe", "cv"),
         "candidate phone number": FieldValue("+971500000000", "cv"),
         "candidate email address": FieldValue("jane@example.com", "cv"),

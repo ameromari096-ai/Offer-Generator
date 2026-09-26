@@ -2,7 +2,7 @@ from decimal import Decimal
 
 import pytest
 
-from offer_agent.salary import compute_salary, format_aed
+from offer_agent.salary import compute_salary, format_aed, format_amount
 
 
 def test_default_fifty_fifty_split_balances():
@@ -46,3 +46,13 @@ def test_format_aed_never_alters_underlying_value_only_display():
     # 50/50 split of an odd total is not evenly divisible -> flagged, not rounded away.
     assert result.balanced
     assert result.warnings
+
+
+def test_format_amount_has_no_currency_prefix():
+    # The Word templates already spell out "AED {{placeholder}}" as literal
+    # text, so the value filled into the placeholder must not repeat it
+    # (which would print "AED AED 20,500").
+    assert format_amount(20500) == "20,500"
+    assert format_amount("20,500") == "20,500"
+    assert format_amount("AED 20500") == "20,500"
+    assert format_amount(Decimal("1234567")) == "1,234,567"

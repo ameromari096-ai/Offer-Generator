@@ -80,9 +80,20 @@
     <div class="section-title">Candidate</div>
     <div class="row">
       <div>
+        <label for="candidate_title">Title *</label>
+        <select name="candidate_title" id="candidate_title">
+          <option value="" {{ "selected" if not prefill or not prefill.candidate_title else "" }} disabled>Select…</option>
+          {% for opt in title_options %}
+          <option value="{{ opt }}" {{ "selected" if prefill and prefill.candidate_title == opt else "" }}>{{ opt }}</option>
+          {% endfor %}
+        </select>
+      </div>
+      <div>
         <label for="candidate_full_name">Full name *</label>
         <input type="text" name="candidate_full_name" id="candidate_full_name" value="{{ prefill.candidate_full_name if prefill else '' }}">
       </div>
+    </div>
+    <div class="row">
       <div>
         <label for="candidate_first_name">First name (leave blank to derive automatically)</label>
         <input type="text" name="candidate_first_name" id="candidate_first_name" value="{{ prefill.candidate_first_name if prefill else '' }}">

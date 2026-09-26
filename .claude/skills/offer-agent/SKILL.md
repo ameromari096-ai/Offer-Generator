@@ -41,11 +41,12 @@ resolve (missing, or any string other than the two above), that is a
 blocking missing field — ask the user, do not guess.
 
 The full, exact placeholder set is `offer_agent.fields.PLACEHOLDERS`:
-`{{Ref}}`, `{{candidate full name}}`, `{{candidate phone number}}`,
-`{{candidate email address}}`, `{{candidate first name}}`, `{{job title}}`,
-`{{date}}`, `{{nationality}}`, `{{line manager}}`, `{{department}}`,
-`{{basic salary}}`, `{{Supplementary allownce}}` (template's own spelling —
-never "fix" it), `{{Total Salary}}`, `{{basic salary per annum}}`,
+`{{Ref}}`, `{{candidate title}}`, `{{candidate full name}}`,
+`{{candidate phone number}}`, `{{candidate email address}}`,
+`{{candidate first name}}`, `{{job title}}`, `{{date}}`, `{{nationality}}`,
+`{{line manager}}`, `{{department}}`, `{{basic salary}}`,
+`{{Supplementary allownce}}` (template's own spelling — never "fix" it),
+`{{Total Salary}}`, `{{basic salary per annum}}`,
 `{{Supplementary allowance per annum}}`, `{{Total Salary per annum}}`,
 `{{notice period}}`. Populate exactly these, nothing more.
 
@@ -145,6 +146,15 @@ field the user has explicitly confirmed is unobtainable gets
 `FieldValue(None, source, confirmed_unavailable=True)` — this does NOT
 block the offer; the placeholder is retained and disclosed instead.
 
+## Title
+
+`candidate title` must be exactly `"Mr."` or `"Ms."` (see
+`offer_agent.fields.TITLE_OPTIONS`) — **never inferred** from the
+candidate's name, nationality, or any other signal. Use it only if a
+source document explicitly states it (e.g. the hiring approval literally
+says "Mr. John Smith"); otherwise it is a missing field — ask the user to
+pick one, the same as any other missing mandatory field.
+
 ## Names
 
 Preserve the highest-priority full name exactly as written — never
@@ -170,14 +180,19 @@ override_monthly_supplementary)` — never do this arithmetic yourself:
   `discrepancies` if not — if unbalanced, show the discrepancy to the user
   and require a correction; never force a balance yourself.
 
-Format every salary figure for display/documents with
+Format every salary figure for the **preview/chat display** with
 `offer_agent.salary.format_aed()` (`"AED #,##0"`, e.g. `"AED 20,500"`).
-Never convert currency, alter approved figures, or round anything except
-through that formatting function.
+For the **placeholders filled into the Word template**
+(`basic salary`, `Supplementary allownce`, `Total Salary`, and their
+per-annum equivalents), use `offer_agent.salary.format_amount()` instead
+(`"#,##0"`, no currency prefix) — both templates already spell out
+`AED {{placeholder}}` as literal text, so using `format_aed()` there would
+print `AED AED 20,500`. Never convert currency, alter approved figures, or
+round anything except through these formatting functions.
 
 ## Missing data
 
-All 17 placeholders are mandatory. After extraction, priority resolution,
+All 18 placeholders are mandatory. After extraction, priority resolution,
 and calculation, request from the user every value still missing. If the
 user confirms a value is unavailable: allow document creation, retain the
 exact placeholder text in both files (the library does this automatically

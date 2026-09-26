@@ -67,6 +67,7 @@ def test_approve_uses_the_configured_backend_not_a_hardcoded_local_one(app_with_
         "/preview",
         data={
             "business_unit": "PureHealth",
+            "candidate_title": "Ms.",
             "candidate_full_name": "Test Approve User",
             "candidate_phone": "+971500000000",
             "candidate_email": "test@example.com",
@@ -112,6 +113,7 @@ def test_local_backend_still_uses_the_download_route(app_with_restored_storage_c
         "/preview",
         data={
             "business_unit": "PureHealth",
+            "candidate_title": "Mr.",
             "candidate_full_name": "Test Local User",
             "candidate_phone": "+971500000001",
             "candidate_email": "test2@example.com",

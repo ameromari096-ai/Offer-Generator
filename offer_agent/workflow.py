@@ -32,7 +32,7 @@ from .docx_to_pdf import PdfConversionError, convert_docx_to_pdf
 from .filenames import FilenameConflictError, resolve_filenames
 from .models import ResolvedOffer
 from .reference import ReferenceGenerationError, ReferenceStore, get_or_create_reference
-from .salary import format_aed
+from .salary import format_amount
 from .storage import StorageBackend, StorageError
 from .validation import ValidationResult, validate_offer
 
@@ -103,12 +103,12 @@ def _build_fill_values(resolved: ResolvedOffer, validation: ValidationResult, re
             values[name] = None
     else:
         b = validation.salary_result.breakdown
-        values["basic salary"] = format_aed(b.monthly_basic)
-        values["Supplementary allownce"] = format_aed(b.monthly_supplementary)
-        values["Total Salary"] = format_aed(b.monthly_total)
-        values["basic salary per annum"] = format_aed(b.annual_basic)
-        values["Supplementary allowance per annum"] = format_aed(b.annual_supplementary)
-        values["Total Salary per annum"] = format_aed(b.annual_total)
+        values["basic salary"] = format_amount(b.monthly_basic)
+        values["Supplementary allownce"] = format_amount(b.monthly_supplementary)
+        values["Total Salary"] = format_amount(b.monthly_total)
+        values["basic salary per annum"] = format_amount(b.annual_basic)
+        values["Supplementary allowance per annum"] = format_amount(b.annual_supplementary)
+        values["Total Salary per annum"] = format_amount(b.annual_total)
 
     return values
 
