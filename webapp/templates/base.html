@@ -109,6 +109,10 @@
       box-shadow: 0 0 0 3px var(--accent-light);
     }
     input::placeholder { color: #9db0b4; font-weight: 400; }
+    /* Reserves two lines' height for a label whose sibling in the same
+       .row might wrap while this one doesn't (or vice versa) - keeps
+       both columns' inputs aligned regardless of exact wrap width. */
+    label.label-2-line { min-height: 2.6em; }
     .row { display: flex; flex-wrap: wrap; gap: 16px; }
     .row > div { flex: 1 1 220px; min-width: 0; }
     .unavailable-toggle { display: flex; align-items: center; gap: 6px; font-weight: 400; font-size: 12px; color: var(--muted); margin-top: 6px; }
